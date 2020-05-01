@@ -1,0 +1,26 @@
+# Maintainer: Pekka Helenius <fincer89 [at] hotmail [dot] com>
+
+pkgname=python-apachelogs
+_pkgname=apachelogs
+pkgver=v0.5.0.r4.g7ee86af
+pkgrel=1
+pkgdesc='Python Apache logs parser'
+arch=('any')
+url='https://github.com/jwodder/apachelogs'
+license=('MIT')
+depends=('python' 'python-pydicti' 'python-attrs')
+makedepends=('git' 'python')
+source=("$pkgname::git+https://github.com/jwodder/${_pkgname}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+package() {
+  cd $pkgname
+  python setup.py install --root="$pkgdir/"
+}
+
+

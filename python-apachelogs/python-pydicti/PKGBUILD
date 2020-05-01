@@ -1,0 +1,24 @@
+# Maintainer: Pekka Helenius <fincer89 [at] hotmail [dot] com>
+
+pkgname=python-pydicti
+_pkgname=pydicti
+pkgver=127.fa414fd
+pkgrel=1
+pkgdesc='Case insensitive dictionary with user-defined underlying dictionary for Python'
+arch=('any')
+url='https://github.com/coldfix/pydicti'
+license=('GPLv2')
+depends=('python')
+makedepends=('git' 'python')
+source=("$pkgname::git+https://github.com/coldfix/${_pkgname}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd $pkgname
+  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+}
+
+package() {
+  cd $pkgname
+  python setup.py install --root="$pkgdir/"
+}

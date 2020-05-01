@@ -1,0 +1,21 @@
+# Maintainer: Pekka Helenius <fincer89 [at] hotmail [dot] com>
+
+pkgname=apache-logparser
+pkgver=1
+pkgrel=1
+pkgdesc='Apache log parser'
+arch=('any')
+url='https://github.com/Fincer/apache-logparser'
+license=('MIT')
+depends=('python' 'python-apachelogs')
+optdepends=(
+  'geoip: Non-DNS IP-to-country resolver C library & utils'
+  'geoip-database: GeoLite country geolocation database compiled by MaxMind'
+)
+makedepends=()
+source=('logparser.py')
+md5sums=('9a11feac97bffa1d8aadc9e91fee49eb')
+
+package() {
+  install -Dm755 ${srcdir}/logparser.py ${pkgdir}/usr/bin/httpd-logparser
+}
