@@ -25,18 +25,19 @@ import argparse
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 from apachelogs import LogParser
 
-out_fields_list = ['log_file_name', 'http_status', 'remote_host', 'country', 'time', 'time_diff', 'user_agent', 'http_request']
+out_fields_list = ['log_file_name', 'http_status', 'remote_host', 'country', 'city', 'time', 'time_diff', 'user_agent', 'http_request']
 out_timeformat  = "%d-%m-%Y %H:%M:%S"
 dayformat       = "%d-%m-%Y"
 ot              = '"' + re.sub(r'%', '%%', out_timeformat) + '"'
 geotool         = "geoiplookup"
-geodb           = "/usr/share/GeoIP/GeoIP.dat"
+geodb           = "/usr/share/GeoIP/"
 
 # Log format as defined in Apache/HTTPD configuration file (LogFormat directive)
-in_log_syntax   = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" \"%{cache-status}e\""
+in_log_syntax   = "%h %u %t %T \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" \"%{cache-status}e\" %I %O"
 
 argparser = argparse.ArgumentParser()
 
@@ -48,6 +49,7 @@ argparser.add_argument('-cf', '--countryfilter',  help = 'Include only these cou
 argparser.add_argument('-ot', '--outtimeformat',  help = 'Output time format.\nDefault: ' + ot, nargs = '?', dest = 'out_timeformat')
 argparser.add_argument('-of', '--outfields',      help = 'Output fields.\nDefault: ' + ', '.join(out_fields_list), nargs = '+', dest = 'out_field')
 argparser.add_argument('-ng', '--nogeo',          help = 'Skip country check with external "geoiplookup" tool.', action='store_true', dest = 'no_geo')
+argparser.add_argument('-gd', '--geodir',         help = 'Database file directory for "geoiplookup" tool.\nDefault: ' + geodb, nargs = '?', dest = 'geodb')
 argparser.add_argument('-dl', '--daylower',       help = 'Do not check log entries older than this day.\nDay syntax: 31-12-2020', nargs = '?', dest = 'day_lower')
 argparser.add_argument('-du', '--dayupper',       help = 'Do not check log entries newer than this day.\nDay syntax: 31-12-2020', nargs = '?', dest = 'day_upper')
 argparser.add_argument('-sb', '--sortby',         help = 'Sort by an output field.', nargs = '?', dest = 'sortby_field')
@@ -233,6 +235,7 @@ i            = 0
 country_seen = False
 prev_host    = ""
 host_country = ""
+host_city    = ""
 log_entries  = []
 
 for file in files:
@@ -296,11 +299,18 @@ for file in files:
                     country_seen = False
 
                 if not country_seen:
-                    host_country = subprocess.check_output([geotool, entry_remote_host]).rstrip().decode()
-                    host_country = re.sub(r"^.*, (.*)", r'\1', host_country)
+                    host_country_main = subprocess.check_output([geotool,'-d',geodb,entry_remote_host]).rstrip().decode()
+                    host_country_main = host_country_main.split('\n')
+                    host_country = re.sub(r"^.*, (.*)", r'\1', host_country_main[0])
 
                     if re.search("Address not found", host_country):
                         host_country = "Unknown"
+
+                    else:
+                        if len(host_country_main) > 1:
+                            host_city = host_country_main[1].split(', ')[4]
+                            if re.search("N/A", host_city):
+                                host_city = "Unknown: " + host_country_main[1].split(', ')[6] + ', ' + host_country_main[1].split(', ')[7]
 
                 if country_filter:
                     for country in countries_filter_list:
@@ -339,6 +349,7 @@ for file in files:
                 ('http_status',   entry_http_status,  '{:3s}' ),
                 ('remote_host',   entry_remote_host,  '{:15s}'),
                 ('country',       host_country,       '{:20s}'),
+                ('city',          host_city,          '{:15s}'),
                 ('time',          entry_time,         '{:8s}' ),
                 ('time_diff',     time_diff,          '{:8s}' ),
                 ('user_agent',    entry_user_agent,   '{:s}'  ),
@@ -353,7 +364,7 @@ for file in files:
                 for out_field in out_fields:
                     entry, data, striformat = out_field
 
-                    if args.no_geo and entry == "country":
+                    if args.no_geo and (entry == "country" or entry == "city"):
                         continue
 
                     if out_fields_list[t] == entry:

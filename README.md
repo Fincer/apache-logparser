@@ -42,6 +42,74 @@ run `updpkgsums && makepkg -Cfi` in [apache-logparser](apache-logparser/) direct
 
 ## Examples
 
+**Q: Can you list me unique connections (IP addresses) associated with country and city location data, using the last Apache log file?**
+
+```
+httpd-logparser --outfields time remote_host country city -d /var/log/httpd/ -f access_log$ -np --stats | sort -k 3 -u | sort -k 4
+
+Processed files:       access_log
+Matched log entries:   724
+Processed log entries: 724
+2021-06-06 10:00:57     135.23.195.XXX   Canada                  Quebec
+2021-06-06 04:58:58     8.210.233.XXX    China                   Guangzhou
+2021-06-06 05:01:37     23.228.109.XXX   China                   Shanghai
+2021-06-06 04:49:57     8.210.71.XXX     China                   Unknown: 34.772499, 113.726601
+2021-06-06 09:47:32     92.151.100.XXX   France                  Boulogne-Billancourt
+2021-06-06 02:05:38     195.154.122.XXX  France                  Ivry-sur-Seine
+2021-06-06 03:24:22     92.116.45.XXX    Germany                 Bielefeld
+2021-06-06 06:06:58     207.154.218.XXX  Germany                 Frankfurt am Main
+2021-06-06 10:45:40     172.105.77.XXX   Germany                 Frankfurt am Main
+2021-06-06 00:25:20     92.116.52.XXX    Germany                 Hamm
+2021-06-06 05:02:54     159.69.10.XXX    Germany                 Mannheim
+2021-06-06 06:24:55     89.246.127.XXX   Germany                 Schloss Holte-Stukenbrock
+2021-06-06 10:08:21     138.201.56.XXX   Germany                 Unknown: 51.299301, 9.490900
+2021-06-06 03:42:02     47.31.198.XXX    India                   Delhi
+2021-06-06 00:15:16     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 02:10:21     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 02:32:48     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 03:26:22     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 06:52:23     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 07:00:48     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 11:10:59     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 00:23:05     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 02:46:33     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
+2021-06-06 05:11:20     45.131.212.XXX   Netherlands             Amsterdam
+2021-06-06 05:12:40     185.180.143.XXX  Portugal                Unknown: 38.705700, -9.135900
+2021-06-06 07:55:47     89.137.179.XXX   Romania                 Timisoara
+2021-06-06 06:10:46     91.243.100.XXX   Russian Federation      Novocherkassk
+2021-06-06 11:30:51     213.177.208.XXX  Spain                   Palencia
+2021-06-06 01:41:48     184.22.158.XXX   Thailand                Thalang
+2021-06-06 08:14:41     176.88.78.XXX    Turkey                  Ankara
+2021-06-06 08:32:04     212.82.66.XXX    United Kingdom          Burnham
+2021-06-06 03:53:41     45.146.164.XXX   United Kingdom          London
+2021-06-06 04:33:42     185.158.250.XXX  United Kingdom          Manchester
+2021-06-06 10:16:19     82.10.88.XXX     United Kingdom          Shrewsbury
+2021-06-06 10:14:28     40.77.189.XXX    United States           Chicago
+2021-06-06 08:16:07     69.170.221.XXX   United States           Colorado Springs
+2021-06-06 10:57:25     192.241.206.XXX  United States           San Francisco
+2021-06-06 01:09:16     128.14.209.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 06:44:49     47.243.113.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 06:45:48     47.243.116.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 08:00:40     162.244.34.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 10:30:53     47.242.214.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 04:22:27     162.244.33.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 04:34:47     47.243.48.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 06:37:16     47.243.109.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 06:42:37     162.244.33.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 06:44:49     47.243.109.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 07:04:20     47.243.113.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 07:44:23     47.243.110.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 08:29:33     47.242.12.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 10:38:15     128.14.133.XXX   United States           Unknown: 37.750999, -97.821999
+2021-06-06 03:18:25     23.95.132.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 04:13:55     128.1.248.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 08:21:11     64.62.197.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 11:17:33     47.243.95.XXX    United States           Unknown: 37.750999, -97.821999
+2021-06-06 08:03:24     167.56.236.XXX   Uruguay                 Castillos
+```
+
+NOTE: The last numerical part of all ip addresses are anonymized with `XXX` string.
+
 **Q: How many valid requests from Finland and Sweden occured between 15th - 24th April 2020?**
 
 ```
@@ -258,8 +326,8 @@ httpd-logparser --outfields http_status time time_diff country -d /var/log/httpd
 ## Usage
 
 ```
-usage: httpd-logparser [-h] -d [LOG_DIR] -f LOG_FILE [LOG_FILE ...] [-s [LOG_SYNTAX]] [-c STATUS_CODE [STATUS_CODE ...]] [-cf COUNTRY [COUNTRY ...]] [-ot [OUT_TIMEFORMAT]]
-                       [-of OUT_FIELD [OUT_FIELD ...]] [-ng] [-dl [DAY_LOWER]] [-du [DAY_UPPER]] [-sb [SORTBY_FIELD]] [-sbr [SORTBY_FIELD_REVERSE]] [-st] [-np]
+usage: httpd-logparser [-h] -d [LOG_DIR] -f LOG_FILE [LOG_FILE ...] [-s [LOG_SYNTAX]] [-c STATUS_CODE [STATUS_CODE ...]] [-cf COUNTRY [COUNTRY ...]] [-ot [OUT_TIMEFORMAT]] [-of OUT_FIELD [OUT_FIELD ...]] [-ng] [-gd [GEODB]] [-dl [DAY_LOWER]] [-du [DAY_UPPER]]
+                       [-sb [SORTBY_FIELD]] [-sbr [SORTBY_FIELD_REVERSE]] [-st] [-np]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -276,8 +344,10 @@ optional arguments:
   -ot [OUT_TIMEFORMAT], --outtimeformat [OUT_TIMEFORMAT]
                         Output time format. Default: "%d-%m-%Y %H:%M:%S"
   -of OUT_FIELD [OUT_FIELD ...], --outfields OUT_FIELD [OUT_FIELD ...]
-                        Output fields. Default: log_file_name, http_status, remote_host, country, time, time_diff, user_agent, http_request
+                        Output fields. Default: log_file_name, http_status, remote_host, country, city, time, time_diff, user_agent, http_request
   -ng, --nogeo          Skip country check with external "geoiplookup" tool.
+  -gd [GEODB], --geodir [GEODB]
+                        Database file directory for "geoiplookup" tool. Default: /usr/share/GeoIP/
   -dl [DAY_LOWER], --daylower [DAY_LOWER]
                         Do not check log entries older than this day. Day syntax: 31-12-2020
   -du [DAY_UPPER], --dayupper [DAY_UPPER]
