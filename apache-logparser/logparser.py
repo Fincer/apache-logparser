@@ -301,7 +301,7 @@ for file in files:
                 if not country_seen:
                     host_country_main = subprocess.check_output([geotool,'-d',geodb,entry_remote_host]).rstrip().decode()
                     host_country_main = host_country_main.split('\n')
-                    host_country = re.sub(r"^.*, (.*)", r'\1', host_country_main[0])
+                    host_country = host_country_main[0].split(', ')[1]
 
                     if re.search("Address not found", host_country):
                         host_country = "Unknown"
