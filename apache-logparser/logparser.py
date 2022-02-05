@@ -301,16 +301,19 @@ for file in files:
                 if not country_seen:
                     host_country_main = subprocess.check_output([geotool,'-d',geodb,entry_remote_host]).rstrip().decode()
                     host_country_main = host_country_main.split('\n')
-                    host_country = host_country_main[0].split(', ')[1]
-
-                    if re.search("Address not found", host_country):
-                        host_country = "Unknown"
+                    try:
+                        host_country = host_country_main[0].split(', ')[1]
+                    except:
+                        if re.search("Address not found", host_country):
+                            host_country = "Unknown"
 
                     else:
                         if len(host_country_main) > 1:
-                            host_city = host_country_main[1].split(', ')[4]
-                            if re.search("N/A", host_city):
-                                host_city = "Unknown: " + host_country_main[1].split(', ')[6] + ', ' + host_country_main[1].split(', ')[7]
+                            try:
+                                host_city = host_country_main[1].split(', ')[4]
+                            except:
+                                if re.search("N/A", host_city):
+                                    host_city = "Unknown: " + host_country_main[1].split(', ')[6] + ', ' + host_country_main[1].split(', ')[7]
 
                 if country_filter:
                     for country in countries_filter_list:
