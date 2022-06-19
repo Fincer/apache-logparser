@@ -145,46 +145,49 @@ NOTE: The last numerical part of all ip addresses are anonymized with `XXX` stri
 **Q: How many valid requests from Finland and Sweden occured between 15th - 24th April 2022?**
 
 ```
-httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,http_status,country --sort-by time --status-codes ^20* --day-lower "15-04-2022" --day-upper "24-04-2022" --show-stats --show-progress
+httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,http_status,country --sort-by time --status-codes ^20* --day-lower "15-04-2022" --day-upper "24-04-2022" --countries Finland,Sweden --show-stats --show-progress
 
 File count: 5
-Lines in total: 151134
-Processing file: /var/log/httpd/access_log (lines: 40213)
-Processing file: /var/log/httpd/access_log.1 (lines: 37518)
-Processing file: /var/log/httpd/access_log.2 (lines: 23468)
-Processing file: /var/log/httpd/access_log.3 (lines: 24045)
-Processing file: /var/log/httpd/access_log.4 (lines: 25890)
-Processing log entry: 142524 (94.30%)
+Lines in total: 86876
+Processing file: /var/log/httpd/access_log (lines: 23116)
+Processing file: /var/log/httpd/access_log.1 (lines: 21566)
+Processing file: /var/log/httpd/access_log.2 (lines: 13490)
+Processing file: /var/log/httpd/access_log.3 (lines: 13822)
+Processing file: /var/log/httpd/access_log.4 (lines: 14882)
+Processing log entry: 81924 (94.30%)
 
 ...
-200     Italy                   2022-04-22 20:54:39 
-200     Italy                   2022-04-22 20:54:39 
-200     Italy                   2022-04-22 20:54:39 
-200     Italy                   2022-04-22 20:54:39 
-200     Italy                   2022-04-22 20:54:39 
-200     Taiwan                  2022-04-22 21:00:27 
-200     Taiwan                  2022-04-22 21:00:28 
-200     Taiwan                  2022-04-22 21:00:29 
-200     Taiwan                  2022-04-22 21:00:29
+200     Sweden                  2022-04-17 21:51:09 
+200     Sweden                  2022-04-17 21:51:10 
+200     Sweden                  2022-04-17 21:51:10 
+200     Sweden                  2022-04-17 23:41:35 
+200     Sweden                  2022-04-17 23:41:36 
+200     Sweden                  2022-04-17 23:41:36 
+200     Sweden                  2022-04-17 23:41:39 
+200     Sweden                  2022-04-18 11:23:18 
+200     Sweden                  2022-04-19 07:16:25 
+200     Sweden                  2022-04-19 07:16:34 
+200     Finland                 2022-04-19 11:47:51 
+200     Finland                 2022-04-19 11:47:52 
+200     Finland                 2022-04-19 11:47:52 
+200     Finland                 2022-04-19 11:47:52
 ...
-200     United States           2022-04-23 22:29:36 
-200     United States           2022-04-23 22:38:50 
-200     United States           2022-04-23 23:06:15 
-200     United States           2022-04-23 23:14:08 
-200     United States           2022-04-23 23:14:09 
-200     United States           2022-04-23 23:24:21 
-200     United States           2022-04-23 23:24:22 
-200     Canada                  2022-04-23 23:31:52 
-200     Ireland                 2022-04-23 23:32:05 
-200     United States           2022-04-23 23:33:36 
-200     Vietnam                 2022-04-23 23:53:37
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 09:51:16 
+200     Finland                 2022-04-22 12:38:49 
+200     Finland                 2022-04-22 16:53:11
+...
 
 Processed files:       /var/log/httpd/access_log, /var/log/httpd/access_log.1, /var/log/httpd/access_log.2, /var/log/httpd/access_log.3, /var/log/httpd/access_log.4
-Processed log entries: 151134
-Matched log entries:   9012
+Processed log entries: 86876
+Matched log entries:   533
 ```
 
-Answer: 9012
+Answer: 533
 
 **Q: How many redirects have occured since the 1st April 2022 according to two selected log files?**
 
