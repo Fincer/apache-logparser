@@ -1,4 +1,4 @@
-# Maintainer: Pekka Helenius <fincer89 [at] hotmail [dot] com>
+# Maintainer: Pekka Helenius <pekka [dot] helenius [at] fjordtek [dot] com>
 
 pkgname=apache-logparser
 pkgver=1
@@ -14,7 +14,7 @@ optdepends=(
 )
 makedepends=()
 source=('logparser.py')
-md5sums=('9a11feac97bffa1d8aadc9e91fee49eb')
+sha256sums=('7f72c82be81eeace0b1ca77adb681e1bb5022ae1918eb4f7a648fd6374bdab93')
 
 package() {
   install -Dm755 ${srcdir}/logparser.py ${pkgdir}/usr/bin/httpd-logparser
