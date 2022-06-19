@@ -8,11 +8,11 @@ Unix-alike systems only.
 
 Keep it simple. Very simple.
 
-Although advanced and nice-looking log analytic tools such as [Elastic Stack](https://www.elastic.co/products/) exists (I have used it), I wanted something far more simple and with far less overhead for weekly tasks and for configuring an Apache web server. Therefore, I wrote this simple Python script to parse Apache web server logs.
+Although advanced and nice-looking log analytic tools such as [Elastic Stack](https://www.elastic.co/products/) exists, I wanted something far more simple and with far less overhead for weekly tasks and for configuring an Apache web server. Therefore, I wrote this simple Python script to parse Apache web server logs.
 
 **Advantages** of this tool are little overhead, piping output to other Unix tools and doing some quick log checks. The main idea is to give desired output for short analysis so that you can properly configure your web server protection mechanisms and network environment based on the actual server data.
 
-This tool is not for intrusion detection/prevention or does not alert administration about hostile penetration attempts. However, it may reveal simple underlying misconfigurations such as invalid URL references on your site.
+This tool is not for intrusion detection/prevention or does not alert administration about hostile penetration attempts. However, it may reveal simple underlying misconfigurations such as invalid URL references on your website.
 
 ## Requirements
 
@@ -38,209 +38,274 @@ geoip-database
 
 Arch Linux:
 
-run `updpkgsums && makepkg -Cfi` in [apache-logparser](apache-logparser/) directory. Installs `httpd-logparser` executable file in `/usr/bin/` folder.
+run `updpkgsums && makepkg -Cfi` in [apache-logparser](apache-logparser/) directory. The command installs `httpd-logparser` executable file in `/usr/bin/` folder.
+
+## Supported output formats
+
+- `table` and `csv`
 
 ## Examples
 
-**Q: Can you list me unique connections (IP addresses) associated with country and city location data, using the last Apache log file?**
+**Q: List unique connections (IP addresses) associated with country and city location data, using the last Apache log file?**
 
 ```
-httpd-logparser --outfields time remote_host country city -d /var/log/httpd/ -f access_log$ -np --stats | sort -k 3 -u | sort -k 4
+httpd-logparser --files-list /var/log/httpd/access_log --included-fields time,remote_host,country,city | sort -k 2 -u | sort -k 3
 
-Processed files:       access_log
-Matched log entries:   724
-Processed log entries: 724
-2021-06-06 10:00:57     135.23.195.XXX   Canada                  Quebec
-2021-06-06 04:58:58     8.210.233.XXX    China                   Guangzhou
-2021-06-06 05:01:37     23.228.109.XXX   China                   Shanghai
-2021-06-06 04:49:57     8.210.71.XXX     China                   Unknown: 34.772499, 113.726601
-2021-06-06 09:47:32     92.151.100.XXX   France                  Boulogne-Billancourt
-2021-06-06 02:05:38     195.154.122.XXX  France                  Ivry-sur-Seine
-2021-06-06 03:24:22     92.116.45.XXX    Germany                 Bielefeld
-2021-06-06 06:06:58     207.154.218.XXX  Germany                 Frankfurt am Main
-2021-06-06 10:45:40     172.105.77.XXX   Germany                 Frankfurt am Main
-2021-06-06 00:25:20     92.116.52.XXX    Germany                 Hamm
-2021-06-06 05:02:54     159.69.10.XXX    Germany                 Mannheim
-2021-06-06 06:24:55     89.246.127.XXX   Germany                 Schloss Holte-Stukenbrock
-2021-06-06 10:08:21     138.201.56.XXX   Germany                 Unknown: 51.299301, 9.490900
-2021-06-06 03:42:02     47.31.198.XXX    India                   Delhi
-2021-06-06 00:15:16     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 02:10:21     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 02:32:48     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 03:26:22     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 06:52:23     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 07:00:48     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 11:10:59     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 00:23:05     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 02:46:33     92.118.160.XXX   Lithuania               Unknown: 56.000000, 24.000000
-2021-06-06 05:11:20     45.131.212.XXX   Netherlands             Amsterdam
-2021-06-06 05:12:40     185.180.143.XXX  Portugal                Unknown: 38.705700, -9.135900
-2021-06-06 07:55:47     89.137.179.XXX   Romania                 Timisoara
-2021-06-06 06:10:46     91.243.100.XXX   Russian Federation      Novocherkassk
-2021-06-06 11:30:51     213.177.208.XXX  Spain                   Palencia
-2021-06-06 01:41:48     184.22.158.XXX   Thailand                Thalang
-2021-06-06 08:14:41     176.88.78.XXX    Turkey                  Ankara
-2021-06-06 08:32:04     212.82.66.XXX    United Kingdom          Burnham
-2021-06-06 03:53:41     45.146.164.XXX   United Kingdom          London
-2021-06-06 04:33:42     185.158.250.XXX  United Kingdom          Manchester
-2021-06-06 10:16:19     82.10.88.XXX     United Kingdom          Shrewsbury
-2021-06-06 10:14:28     40.77.189.XXX    United States           Chicago
-2021-06-06 08:16:07     69.170.221.XXX   United States           Colorado Springs
-2021-06-06 10:57:25     192.241.206.XXX  United States           San Francisco
-2021-06-06 01:09:16     128.14.209.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 06:44:49     47.243.113.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 06:45:48     47.243.116.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 08:00:40     162.244.34.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 10:30:53     47.242.214.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 04:22:27     162.244.33.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 04:34:47     47.243.48.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 06:37:16     47.243.109.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 06:42:37     162.244.33.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 06:44:49     47.243.109.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 07:04:20     47.243.113.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 07:44:23     47.243.110.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 08:29:33     47.242.12.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 10:38:15     128.14.133.XXX   United States           Unknown: 37.750999, -97.821999
-2021-06-06 03:18:25     23.95.132.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 04:13:55     128.1.248.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 08:21:11     64.62.197.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 11:17:33     47.243.95.XXX    United States           Unknown: 37.750999, -97.821999
-2021-06-06 08:03:24     167.56.236.XXX   Uruguay                 Castillos
+103.102.153.XXX Indonesia               Unknown: -6.175000, 106.828598  2022-06-12 10:33:58 
+103.102.153.XXX Indonesia               Unknown: -6.175000, 106.828598  2022-06-12 10:33:59 
+103.102.153.XXX Indonesia               Unknown: -6.175000, 106.828598  2022-06-12 10:34:00 
+103.102.153.XXX Indonesia               Unknown: -6.175000, 106.828598  2022-06-12 10:34:01 
+103.144.178.XXX Indonesia               Unknown: -6.175000, 106.828598  2022-06-16 06:34:19 
+62.214.113.XXX  Germany                 Unterhaching    2022-06-10 14:39:16 
+62.214.113.XXX  Germany                 Unterhaching    2022-06-10 16:34:15 
+62.214.113.XXX  Germany                 Unterhaching    2022-06-10 16:40:03 
+62.214.113.XXX  Germany                 Unterhaching    2022-06-10 16:40:04 
+62.214.113.XXX  Germany                 Unterhaching    2022-06-10 16:40:05 
+84.234.169.XXX  Norway                  Valderoy        2022-06-06 00:20:18 
+194.137.241.XXX Finland                 Vantaa          2022-06-07 12:20:42 
+194.137.241.XXX Finland                 Vantaa          2022-06-07 12:20:43 
+194.137.241.XXX Finland                 Vantaa          2022-06-07 12:20:44
+...
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-07 21:25:38 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-07 21:25:39 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-07 21:25:40 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-07 21:25:41 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-07 21:25:42 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-08 23:35:25 
+176.108.111.XXX Ukraine                 Vyzhnytsya      2022-06-11 19:52:42 
+82.207.245.XXX  Germany                 Wachtberg       2022-06-03 02:26:58 
+82.207.245.XXX  Germany                 Wachtberg       2022-06-03 02:27:08 
+82.207.245.XXX  Germany                 Wachtberg       2022-06-03 02:27:09 
+82.207.245.XXX  Germany                 Wachtberg       2022-06-03 02:27:10 
+79.191.159.XXX  Poland                  Warsaw          2022-06-11 18:05:13 
+49.7.20.XXX     China                   Wenzhou         2022-06-09 15:26:26 
+49.7.21.XXX     China                   Wenzhou         2022-06-09 23:25:57 
+49.7.20.XXX     China                   Wenzhou         2022-06-19 01:41:41 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:45:21 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:10 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:11 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:12 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:13 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:14 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:41 
+81.82.244.XXX   Belgium                 Wetteren        2022-06-13 13:49:46 
+95.223.231.XXX  Germany                 Wiesbaden       2022-06-04 21:42:20 
+95.223.231.XXX  Germany                 Wiesbaden       2022-06-04 21:42:21 
+95.223.231.XXX  Germany                 Wiesbaden       2022-06-04 21:42:23 
+95.223.231.XXX  Germany                 Wiesbaden       2022-06-04 21:42:28 
+37.201.116.XXX  Germany                 Wiesbaden       2022-06-10 19:55:50 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:21 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:22 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:23 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:25 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:26 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:57 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:51:58 
+113.57.152.XXX  China                   Wuhan           2022-06-14 15:52:01 
+89.164.183.XXX  Croatia                 Zagreb          2022-06-04 11:44:22 
+89.164.183.XXX  Croatia                 Zagreb          2022-06-04 11:44:23 
+89.164.183.XXX  Croatia                 Zagreb          2022-06-04 11:44:24 
+89.164.183.XXX  Croatia                 Zagreb          2022-06-04 11:44:25 
+89.164.183.XXX  Croatia                 Zagreb          2022-06-04 11:44:26 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:49 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:51 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:52 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:53 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:55 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:56 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:45:59 
+86.32.46.XXX    Croatia                 Zagreb          2022-06-04 16:46:00 
+85.10.56.XXX    Croatia                 Zagreb          2022-06-09 19:39:55 
+85.10.56.XXX    Croatia                 Zagreb          2022-06-17 19:57:56 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:41 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:42 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:43 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:44 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:45 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:46 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:47 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:48 
+122.56.232.XXX  New Zealand             Auckland        2022-06-02 08:46:49 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:22 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:23 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:24 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:25 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:26 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:27 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:28 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:29 
+121.98.28.XXX   New Zealand             Dunedin         2022-06-08 14:32:30 
+185.113.213.XXX Netherlands             Zennewijnen     2022-06-15 11:54:36 
+185.113.213.XXX Netherlands             Zennewijnen     2022-06-15 11:54:37 
+185.113.213.XXX Netherlands             Zennewijnen     2022-06-15 11:54:39
 ```
 
 NOTE: The last numerical part of all ip addresses are anonymized with `XXX` string.
 
-**Q: How many valid requests from Finland and Sweden occured between 15th - 24th April 2020?**
+**Q: How many valid requests from Finland and Sweden occured between 15th - 24th April 2022?**
 
 ```
-httpd-logparser --outfields time http_status country -d /var/log/httpd/ -c ^20* -f access_log* -cf Finland Sweden -dl "15-04-2020" -du "24-04-2020" --sortby time --stats
+httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,http_status,country --sort-by time --status-codes ^20* --day-lower "15-04-2022" --day-upper "24-04-2022" --show-stats --show-progress
 
+File count: 5
+Lines in total: 151134
+Processing file: /var/log/httpd/access_log (lines: 40213)
+Processing file: /var/log/httpd/access_log.1 (lines: 37518)
+Processing file: /var/log/httpd/access_log.2 (lines: 23468)
+Processing file: /var/log/httpd/access_log.3 (lines: 24045)
+Processing file: /var/log/httpd/access_log.4 (lines: 25890)
+Processing log entry: 142524 (94.30%)
 
-Processing file: access_log
-Processing file: access_log.1
-Processing file: access_log.2
-Processing file: access_log.3
-Processing file: access_log.4
-Processing log entry: 883
-
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
-2020-04-17 08:47:05     200     Finland
 ...
+200     Italy                   2022-04-22 20:54:39 
+200     Italy                   2022-04-22 20:54:39 
+200     Italy                   2022-04-22 20:54:39 
+200     Italy                   2022-04-22 20:54:39 
+200     Italy                   2022-04-22 20:54:39 
+200     Taiwan                  2022-04-22 21:00:27 
+200     Taiwan                  2022-04-22 21:00:28 
+200     Taiwan                  2022-04-22 21:00:29 
+200     Taiwan                  2022-04-22 21:00:29
 ...
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:07     200     Finland
-2020-04-23 18:04:08     200     Finland
+200     United States           2022-04-23 22:29:36 
+200     United States           2022-04-23 22:38:50 
+200     United States           2022-04-23 23:06:15 
+200     United States           2022-04-23 23:14:08 
+200     United States           2022-04-23 23:14:09 
+200     United States           2022-04-23 23:24:21 
+200     United States           2022-04-23 23:24:22 
+200     Canada                  2022-04-23 23:31:52 
+200     Ireland                 2022-04-23 23:32:05 
+200     United States           2022-04-23 23:33:36 
+200     Vietnam                 2022-04-23 23:53:37
 
-Processed files:       access_log, access_log.1, access_log.2, access.log_3, access_log.4
-Processed log entries: 883
-Matched log entries:   211
+Processed files:       /var/log/httpd/access_log, /var/log/httpd/access_log.1, /var/log/httpd/access_log.2, /var/log/httpd/access_log.3, /var/log/httpd/access_log.4
+Processed log entries: 151134
+Matched log entries:   9012
 ```
 
+Answer: 9012
 
-**Q: How many redirects have occured since 01st April 2020?**
+**Q: How many redirects have occured since the 1st April 2022 according to two selected log files?**
 
 ```
 httpd-logparser --outfields time http_status country -d /var/log/httpd/ -c ^30* -f access_log* -dl "01-04-2020" --sortby time --stats
 
-Processing file: access_log
-Processing file: access_log.1
-Processing file: access_log.2
-Processing file: access_log.3
-Processing file: access_log.4
-Processing log entry: 8993
+httpd-logparser --files-regex /var/log/httpd/access_log.\[2-3\] --included-fields time,http_status,country --sort-by time --status-codes ^30* --day-lower "01-04-2022" --show-stats
 
-2020-04-01 02:13:12     302     United States
-2020-04-01 02:13:12     302     United States
-2020-04-01 02:13:13     301     United States
-2020-04-01 02:13:13     302     United States
-2020-04-01 02:13:14     302     United States
-2020-04-01 02:13:14     302     United States
-2020-04-01 02:13:14     302     United States
-2020-04-01 02:13:15     302     United States
-2020-04-01 02:13:15     302     United States
-2020-04-01 03:25:06     302     United States
-2020-04-01 04:03:39     302     Russian Federation
-2020-04-01 04:03:44     302     Russian Federation
 ...
+304     Canada                  2022-05-23 01:52:45 
+302     Canada                  2022-05-23 01:53:33 
+302     Europe                  2022-05-23 01:56:03 
+302     Poland                  2022-05-23 02:00:31 
+302     Russian Federation      2022-05-23 02:52:50 
+302     United States           2022-05-23 04:34:30 
+302     France                  2022-05-23 04:51:31 
+302     Germany                 2022-05-23 05:02:16 
+302     Russian Federation      2022-05-23 05:04:13 
+302     Russian Federation      2022-05-23 05:04:14 
+302     Russian Federation      2022-05-23 05:04:14 
+302     United States           2022-05-23 05:11:10 
+302     United States           2022-05-23 05:11:11 
+302     Russian Federation      2022-05-23 05:23:09 
+302     China                   2022-05-23 05:54:41
 ...
-2020-05-01 18:53:05     302     Italy
-2020-05-01 18:53:21     301     Italy
-2020-05-01 18:53:22     301     Italy
-2020-05-01 18:53:24     302     Italy
-2020-05-01 18:53:25     302     Italy
-2020-05-01 18:53:26     302     Italy
-2020-05-01 18:53:26     302     Italy
-2020-05-01 18:54:20     302     Italy
-2020-05-01 19:18:15     301     Russian Federation
-2020-05-01 19:18:15     301     Russian Federation
-2020-05-01 19:18:15     301     Russian Federation
-2020-05-01 19:18:17     301     Russian Federation
-2020-05-01 19:21:19     302     France
+302     Germany                 2022-05-31 19:53:18 
+302     Germany                 2022-05-31 19:53:18 
+302     Germany                 2022-05-31 19:53:18 
+302     Germany                 2022-05-31 19:53:19 
+302     Germany                 2022-05-31 19:53:19 
+304     Finland                 2022-05-31 20:06:55 
+304     Finland                 2022-05-31 20:16:02 
+304     Finland                 2022-05-31 20:16:03 
+304     Finland                 2022-05-31 20:16:06 
+302     Russian Federation      2022-05-31 20:40:33 
+302     United Kingdom          2022-05-31 21:09:32 
+302     China                   2022-05-31 21:13:38 
+302     Russian Federation      2022-05-31 21:20:09 
+302     Romania                 2022-05-31 22:01:31 
+304     United States           2022-05-31 22:11:30 
+302     Russian Federation      2022-05-31 22:59:23 
+302     United States           2022-05-31 23:16:52 
+304     Ukraine                 2022-05-31 23:22:50 
+302     Russian Federation      2022-05-31 23:30:51 
+302     Netherlands             2022-05-31 23:37:10 
+302     Netherlands             2022-05-31 23:37:11 
+302     Netherlands             2022-05-31 23:37:12
 
-Processed files:       access_log, access_log.1, access_log.2, access_log.3, access_log.4
-Processed log entries: 8994
-Matched log entries:   3207
+Processed files:       /var/log/httpd/access_log.2, /var/log/httpd/access_log.3
+Processed log entries: 77730
+Matched log entries:   6788
+
+Invalid lines:
+        File: /var/log/httpd/access_log.2, line: 24668
+
 ```
 
-**Q: How many `4XX` codes have connected clients from China and United States produced in all time?**
+Answer: 6788
+
+You should also check any invalid log lines detected by the tool.
+
+**Q: How many `4XX` codes have connected clients from China and United States produced?**
 
 ```
-httpd-logparser --outfields time country http_status http_request -d /var/log/httpd/ -c ^4 -f access_log* -cf "United States" China --sortby time --stats
+httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,country,http_status,http_request --countries "United States",China --sort-by time --status-codes ^4 --show-progress --show-stats
 
-Processing file: access_log
-Processing file: access_log.1
-Processing file: access_log.2
-Processing file: access_log.3
-Processing file: access_log.4
-Processing log entry: 10221
-
-2020-03-29 18:49:34     United States           408     None
-2020-03-29 18:49:34     United States           408     None
-2020-03-29 19:28:02     China                   408     None
-2020-04-08 06:14:48     China                   400     GET /phpMyAdmin/scripts/setup.php HTTP/1.1
-2020-04-08 06:14:53     China                   400     GET /horde/imp/test.php HTTP/1.1
-2020-04-08 06:14:54     China                   400     GET /login?from=0.000000 HTTP/1.1
+File count: 2
+Lines in total: 23614
+Processing file: /var/log/httpd/access_log (lines: 12021)
+Processing file: /var/log/httpd/access_log.1 (lines: 11593)
+Processing log entry: 18423 (78.01%)
 ...
+
+408     United States           2022-06-01 03:45:18     None
+408     United States           2022-06-01 03:45:18     None
+408     United States           2022-06-01 09:11:15     None
+408     United States           2022-06-01 11:36:05     None
+408     United States           2022-06-01 11:36:05     None
+421     United States           2022-06-01 13:08:29     GET / HTTP/1.1
+408     United States           2022-06-01 19:44:42     None
+408     United States           2022-06-01 19:44:42     None
+408     China                   2022-06-02 06:30:51     None
+408     China                   2022-06-02 06:30:51     None
+408     China                   2022-06-02 06:30:51     None
+408     United States           2022-06-02 11:45:57     None
+408     United States           2022-06-02 11:46:05     None
+408     United States           2022-06-02 11:46:18     None
+408     United States           2022-06-02 20:53:49     None
+408     United States           2022-06-02 20:53:49     None
+408     United States           2022-06-03 00:01:39     None
+408     United States           2022-06-03 00:02:04     None
+408     United States           2022-06-03 00:02:37     None
+408     United States           2022-06-03 00:21:26     None
+408     China                   2022-06-03 11:39:22     None
+408     United States           2022-06-03 15:41:34     None
+408     United States           2022-06-04 01:28:08     None
+408     United States           2022-06-04 07:29:53     None
+408     United States           2022-06-04 07:29:56     None
+408     United States           2022-06-04 07:29:56     None
+408     United States           2022-06-04 11:25:10     None
+408     United States           2022-06-04 11:25:10     None
+408     China                   2022-06-04 11:37:11     None
+408     United States           2022-06-04 17:36:35     None
+408     China                   2022-06-05 15:56:35     None
+408     China                   2022-06-05 15:56:45     None
+408     United States           2022-06-06 01:32:25     None
+408     United States           2022-06-06 01:32:25     None
+408     United States           2022-06-06 01:32:29     None
 ...
-2020-04-24 10:40:16     United States           403     GET /MAPI/API HTTP/1.1
-2020-04-24 11:33:16     United States           403     GET /owa/auth/logon.aspx?url=https%3a%2f%2f1%2fecp%2f HTTP/1.1
-2020-04-24 13:00:12     United States           403     GET /cgi-bin/luci HTTP/1.1
-2020-04-24 13:00:13     United States           403     GET /dana-na/auth/url_default/welcome.cgi HTTP/1.1
-2020-04-24 13:00:15     United States           403     GET /remote/login?lang=en HTTP/1.1
-2020-04-24 13:00:17     United States           403     GET /index.asp HTTP/1.1
-2020-04-24 13:00:18     United States           403     GET /htmlV/welcomeMain.htm HTTP/1.1
-2020-04-24 20:08:20     United States           403     GET /dana-na/auth/url_default/welcome.cgi HTTP/1.1
-2020-04-24 20:08:22     United States           403     GET /remote/login?lang=en HTTP/1.1
-2020-04-25 03:57:39     United States           403     GET /home.asp HTTP/1.1
-2020-04-25 03:57:39     United States           403     GET /login.cgi?uri= HTTP/1.1
-2020-04-25 03:57:39     United States           403     GET /vpn/index.html HTTP/1.1
-2020-04-25 03:57:39     United States           403     GET /cgi-bin/luci HTTP/1.1
-2020-04-25 03:57:40     United States           403     GET /dana-na/auth/url_default/welcome.cgi HTTP/1.1
-2020-04-25 03:57:40     United States           403     GET /remote/login?lang=en HTTP/1.1
-2020-04-25 03:57:40     United States           403     GET /index.asp HTTP/1.1
-2020-04-25 03:57:40     United States           403     GET /htmlV/welcomeMain.htm HTTP/1.1
-2020-04-25 11:56:32     United States           403     GET /owa/auth/logon.aspx?url=https%3a%2f%2f1%2fecp%2f HTTP/1.1
-2020-04-25 21:29:50     United States           403     GET /images/favicon-32x32.png HTTP/1.1
-2020-04-25 21:30:08     United States           408     None
 
-Processed files:       access_log, access_log.1, access_log.2, access_log.3, access_log.4
-Processed log entries: 10222
-Matched log entries:   90
+Processed files:       /var/log/httpd/access_log, /var/log/httpd/access_log.1
+Processed log entries: 23614
+Matched log entries:   112
 ```
 
-**Q: Which user agents are used by all clients in all time?**
+Answer: 112
+
+**Q: Which user agents clients have used recently?**
 
 ```
-httpd-logparser --outfields user_agent -d /var/log/httpd/ -f access_log* --noprogress | sort -u
+httpd-logparser --files-list /var/log/httpd/access_log --included-fields user_agent | sort -u
 
 facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)
 fasthttp
@@ -280,84 +345,115 @@ Wget/1.19.4 (linux-gnu)
 WinHTTP/1.1
 ```
 
-**Q: Time difference between a single client requests? Exclude Finland! Include only the most recent access_log file.**
+**Q: Which is time difference between single client requests? Exclude Finland. Include all access_log files.**
 
 ```
-httpd-logparser --outfields http_status time time_diff country -d /var/log/httpd/ -cf "\!Finland" -f access_log$
+httpd-logparser --included-fields http_status,time,time_diff,country --countries "\!Finland" --files-regex /var/log/httpd/old/access_log
 
-200     2020-05-01 18:53:07     +2.0            Italy
-200     2020-05-01 18:53:19     +12.0           Italy
-200     2020-05-01 18:53:20     +1.0            Italy
-200     2020-05-01 18:53:20     0.0             Italy
-200     2020-05-01 18:53:21     +1.0            Italy
-200     2020-05-01 18:53:20     -1.0            Italy
-200     2020-05-01 18:53:21     +1.0            Italy
-200     2020-05-01 18:53:21     0.0             Italy
-301     2020-05-01 18:53:21     0.0             Italy
-301     2020-05-01 18:53:22     +1.0            Italy
-200     2020-05-01 18:53:22     0.0             Italy
-200     2020-05-01 18:53:22     0.0             Italy
-200     2020-05-01 18:53:23     +1.0            Italy
-200     2020-05-01 18:53:23     0.0             Italy
-302     2020-05-01 18:53:24     +1.0            Italy
-200     2020-05-01 18:53:24     0.0             Italy
-200     2020-05-01 18:53:25     +1.0            Italy
-302     2020-05-01 18:53:25     0.0             Italy
-302     2020-05-01 18:53:26     +1.0            Italy
-302     2020-05-01 18:53:26     0.0             Italy
-200     2020-05-01 18:53:26     0.0             Italy
-200     2020-05-01 18:53:27     +1.0            Italy
-200     2020-05-01 18:53:32     +5.0            Italy
-302     2020-05-01 18:54:20     +48.0           Italy
-408     2020-05-01 18:54:40     +20.0           Italy
+200     Taiwan                  2022-06-19 12:21:47     NEW_CONN
+200     Taiwan                  2022-06-19 12:21:48     +1      
+200     Taiwan                  2022-06-19 12:21:49     +1      
+200     Taiwan                  2022-06-19 12:21:49     0       
+200     Taiwan                  2022-06-19 12:21:49     0       
+200     Taiwan                  2022-06-19 12:21:49     0       
+200     Taiwan                  2022-06-19 12:21:50     +1      
+200     Taiwan                  2022-06-19 12:21:49     -1      
+200     Taiwan                  2022-06-19 12:21:49     0       
+200     Taiwan                  2022-06-19 12:21:50     +1      
+200     Taiwan                  2022-06-19 12:21:50     0       
+200     Taiwan                  2022-06-19 12:21:50     0       
+200     Taiwan                  2022-06-19 12:21:51     +1      
+200     Taiwan                  2022-06-19 12:21:56     +5      
+200     Taiwan                  2022-06-19 12:22:04     +8      
+200     Taiwan                  2022-06-19 12:22:05     +1      
+200     Taiwan                  2022-06-19 12:22:06     +1      
+200     Taiwan                  2022-06-19 12:22:06     0       
+200     Taiwan                  2022-06-19 12:22:06     0       
+302     Taiwan                  2022-06-19 12:22:07     +1      
+200     Taiwan                  2022-06-19 12:22:07     0       
+200     Taiwan                  2022-06-19 12:22:07     0       
+200     Taiwan                  2022-06-19 12:22:07     0       
+200     Taiwan                  2022-06-19 12:22:07     0       
+200     Taiwan                  2022-06-19 12:22:07     0       
+200     Taiwan                  2022-06-19 12:22:14     +7      
+200     Taiwan                  2022-06-19 12:22:14     0       
+200     Japan                   2022-06-19 12:34:49     NEW_CONN
+200     Japan                   2022-06-19 12:34:54     +5      
+200     United States           2022-06-19 12:55:44     NEW_CONN
+200     United States           2022-06-19 12:55:44     0       
+200     United States           2022-06-19 12:55:50     +6      
+200     United States           2022-06-19 12:55:55     +5      
+302     France                  2022-06-19 13:01:30     NEW_CONN
+200     United States           2022-06-19 13:10:07     NEW_CONN
+200     United States           2022-06-19 13:10:12     +5      
+302     China                   2022-06-19 13:15:59     NEW_CONN
+302     China                   2022-06-19 13:16:10     +11     
+302     China                   2022-06-19 13:16:11     +1      
+200     Germany                 2022-06-19 13:27:42     NEW_CONN
+200     Hong Kong               2022-06-19 13:40:02     NEW_CONN
+200     Hong Kong               2022-06-19 13:40:02     0       
+200     Hong Kong               2022-06-19 13:40:02     0       
 ...
-...
-200     2020-05-01 22:14:36     NEW_CONN        Russian Federation
-200     2020-05-01 22:30:40     +964.0          Russian Federation
-500     2020-05-01 22:35:01     NEW_CONN        Singapore
-500     2020-05-01 22:35:06     +5.0            Singapore
-500     2020-05-01 22:35:09     +3.0            Singapore
-500     2020-05-01 22:35:14     +5.0            Singapore
-200     2020-05-01 22:37:47     NEW_CONN        Russian Federation
-...
+200     India                   2022-06-19 13:45:03     NEW_CONN
+200     India                   2022-06-19 13:45:04     +1      
+200     India                   2022-06-19 13:45:04     0       
+200     India                   2022-06-19 13:45:04     0       
+200     India                   2022-06-19 13:45:04     0       
+200     India                   2022-06-19 13:45:05     +1      
+200     India                   2022-06-19 13:45:05     0       
+200     India                   2022-06-19 13:45:05     0
 ...
 ```
 
 ## Usage
 
 ```
-usage: httpd-logparser [-h] -d [LOG_DIR] -f LOG_FILE [LOG_FILE ...] [-s [LOG_SYNTAX]] [-c STATUS_CODE [STATUS_CODE ...]] [-cf COUNTRY [COUNTRY ...]] [-ot [OUT_TIMEFORMAT]] [-of OUT_FIELD [OUT_FIELD ...]] [-ng] [-gd [GEODB]] [-dl [DAY_LOWER]] [-du [DAY_UPPER]]
-                       [-sb [SORTBY_FIELD]] [-sbr [SORTBY_FIELD_REVERSE]] [-st] [-np]
+usage: httpd-logparser [-h] [-fr [FILES_REGEX]] [-f [FILES_LIST]] [-c CODES [CODES ...]] [-cf [COUNTRIES]] [-tf [TIME_FORMAT]] [-if [INCL_FIELDS]]
+                     [-ef [EXCL_FIELDS]] [-gl] [-ge [GEOTOOL_EXEC]] [-gd [GEO_DATABASE_LOCATION]] [-dl [DATE_LOWER]] [-du [DATE_UPPER]]
+                     [-sb [SORTBY_FIELD]] [-ro] [-st] [-p] [--httpd-conf-file] [--httpd-log-nickname] [-lf LOG_FORMAT] [-ph]
+                     [--output-format {table,csv}]
+
+Apache HTTPD server log parser
 
 optional arguments:
   -h, --help            show this help message and exit
-  -d [LOG_DIR], --dir [LOG_DIR]
-                        Apache log file directory.
-  -f LOG_FILE [LOG_FILE ...], --files LOG_FILE [LOG_FILE ...]
-                        Apache log files. Regular expressions supported.
-  -s [LOG_SYNTAX], --logsyntax [LOG_SYNTAX]
-                        Apache log files syntax, defined as "LogFormat" directive in Apache configuration.
-  -c STATUS_CODE [STATUS_CODE ...], --statuscodes STATUS_CODE [STATUS_CODE ...]
-                        Print only these status codes. Regular expressions supported.
-  -cf COUNTRY [COUNTRY ...], --countryfilter COUNTRY [COUNTRY ...]
-                        Include only these countries. Negative match (exclude): "\!Country"
-  -ot [OUT_TIMEFORMAT], --outtimeformat [OUT_TIMEFORMAT]
-                        Output time format. Default: "%d-%m-%Y %H:%M:%S"
-  -of OUT_FIELD [OUT_FIELD ...], --outfields OUT_FIELD [OUT_FIELD ...]
-                        Output fields. Default: log_file_name, http_status, remote_host, country, city, time, time_diff, user_agent, http_request
-  -ng, --nogeo          Skip country check with external "geoiplookup" tool.
-  -gd [GEODB], --geodir [GEODB]
-                        Database file directory for "geoiplookup" tool. Default: /usr/share/GeoIP/
-  -dl [DAY_LOWER], --daylower [DAY_LOWER]
-                        Do not check log entries older than this day. Day syntax: 31-12-2020
-  -du [DAY_UPPER], --dayupper [DAY_UPPER]
-                        Do not check log entries newer than this day. Day syntax: 31-12-2020
-  -sb [SORTBY_FIELD], --sortby [SORTBY_FIELD]
-                        Sort by an output field.
-  -sbr [SORTBY_FIELD_REVERSE], --sortbyreverse [SORTBY_FIELD_REVERSE]
-                        Sort by an output field, reverse order.
-  -st, --stats          Show short statistics at the end.
-  -np, --noprogress     Do not show progress information.
+  -fr [FILES_REGEX], --files-regex [FILES_REGEX]
+                        Apache log files matching input regular expression. (default: None)
+  -f [FILES_LIST], --files-list [FILES_LIST]
+                        Apache log files. Regular expressions supported. (default: None)
+  -c CODES [CODES ...], --status-codes CODES [CODES ...]
+                        Print only these numerical status codes. Regular expressions supported. (default: None)
+  -cf [COUNTRIES], --countries [COUNTRIES]
+                        Include only these countries. Negative match (exclude): "\!Country" (default: None)
+  -tf [TIME_FORMAT], --time-format [TIME_FORMAT]
+                        Output time format. (default: %d-%m-%Y %H:%M:%S)
+  -if [INCL_FIELDS], --included-fields [INCL_FIELDS]
+                        Included fields. All fields: all, log_file_name, http_status, remote_host, country, city, time, time_diff, user_agent,
+                        http_request (default: http_status, remote_host, time, time_diff, user_agent, http_request)
+  -ef [EXCL_FIELDS], --excluded-fields [EXCL_FIELDS]
+                        Excluded fields. (default: None)
+  -gl, --geo-location   Check origin countries with external "geoiplookup" tool. NOTE: Automatically includes "country" and "city" fields. (default:
+                        False)
+  -ge [GEOTOOL_EXEC], --geotool-exec [GEOTOOL_EXEC]
+                        "geoiplookup" tool executable found in PATH. (default: geoiplookup)
+  -gd [GEO_DATABASE_LOCATION], --geo-database-dir [GEO_DATABASE_LOCATION]
+                        Database file directory for "geoiplookup" tool. (default: /usr/share/GeoIP/)
+  -dl [DATE_LOWER], --day-lower [DATE_LOWER]
+                        Do not check log entries older than this day. Day syntax: 31-12-2020 (default: None)
+  -du [DATE_UPPER], --day-upper [DATE_UPPER]
+                        Do not check log entries newer than this day. Day syntax: 31-12-2020 (default: None)
+  -sb [SORTBY_FIELD], --sort-by [SORTBY_FIELD]
+                        Sort by an output field. (default: None)
+  -ro, --reverse-order  Sort in reverse order. (default: False)
+  -st, --show-stats     Show short statistics at the end. (default: False)
+  -p, --show-progress   Show progress information. (default: False)
+  --httpd-conf-file     Apache HTTPD configuration file with LogFormat directive. (default: /etc/httpd/conf/httpd.conf)
+  --httpd-log-nickname  LogFormat directive nickname (default: combinedio)
+  -lf LOG_FORMAT, --log-format LOG_FORMAT
+                        Log format, manually defined. (default: None)
+  -ph, --print-headers  Print column headers. (default: False)
+  --output-format {table,csv}
+                        Output format for results. (default: table)
 ```
 
 ## License
