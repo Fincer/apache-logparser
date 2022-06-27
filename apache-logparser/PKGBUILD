@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc='Apache log parser'
 arch=('any')
 url='https://github.com/Fincer/apache-logparser'
-license=('MIT')
+license=('GPL')
 depends=('python' 'python-apachelogs')
 optdepends=(
   'geoip: Non-DNS IP-to-country resolver C library & utils'
@@ -14,7 +14,7 @@ optdepends=(
 )
 makedepends=()
 source=('logparser.py')
-sha256sums=('7f72c82be81eeace0b1ca77adb681e1bb5022ae1918eb4f7a648fd6374bdab93')
+sha256sums=('35d87299212417c58a09f08e7feb7be856647eb31940e3de745528164810944a')
 
 package() {
   install -Dm755 ${srcdir}/logparser.py ${pkgdir}/usr/bin/httpd-logparser
