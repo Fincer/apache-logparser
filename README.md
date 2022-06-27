@@ -1,8 +1,6 @@
-# Apache log parser
+# Apache HTTPD log parser
 
-Simple Apache/HTTPD command-line log parser for short analysis, targeted to web server administration tasks.
-
-Unix-alike systems only.
+Apache/HTTPD command-line log parser for Linux web server administrators.
 
 ## Motivation
 
@@ -16,7 +14,7 @@ This tool is not for intrusion detection/prevention or does not alert administra
 
 ## Requirements
 
-Following Arch Linux packages. If you use another distribution, refer to corresponding packages:
+Following Python packages (Arch Linux):
 
 ```
 python
@@ -40,9 +38,25 @@ Arch Linux:
 
 run `updpkgsums && makepkg -Cfi` in [apache-logparser](apache-logparser/) directory. The command installs `httpd-logparser` executable file in `/usr/bin/` folder.
 
-## Supported output formats
+## Features
 
-- `table` and `csv`
+- Multiple Linux distributions supported
+- Supported output formats: `table` and `csv`
+- Use output log entry field ordering
+- Include and exclude log entry fields
+- Date ranges
+- Geo IP lookup for log entries
+  - Get origin countries and cities
+  - Unknown cities: give coordinates instead
+  - Check also: [MaxMind DB Apache Module](https://github.com/maxmind/mod_maxminddb)
+- Output field filters
+  - Limit processed log entries with `--head` and `--tail` parameters
+  - Get only interesting HTTP response codes
+  - Get only interesting countries of origin
+- Process multiple log files at once, either by providing a list of files or matching regex
+- Show processing status
+- Show processing summary
+- List invalid log entries that couldn't be processed
 
 ## Examples
 
