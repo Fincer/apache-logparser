@@ -408,13 +408,59 @@ httpd-logparser --included-fields http_status,time,time_diff,country --countries
 ...
 ```
 
+**Get CSV formatted output, selected fields only, use day limit, process last 100 server log entries. Print header information.**
+
+```
+httpd-logparser --files-list /var/log/httpd/access_log --geo-location --sort-by time --included-fields time,country,city,http_request --day-lower 27-06-2022 --verbose --tail 100 --output csv --print-header
+
+Date/Time,Country,City,Request
+...
+2022-06-27 23:33:14,United States,Unknown: 37.750999, -97.821999,GET /git/explore/repos?sort=recentupdate&q=dds-format&tab= HTTP/1.1
+2022-06-27 23:33:16,United States,Unknown: 37.750999, -97.821999,GET /git/explore/repos?sort=reversealphabetically&q=transmission&tab= HTTP/1.1
+2022-06-27 23:33:19,United States,Unknown: 37.750999, -97.821999,GET /git/explore/repos?sort=feweststars&q=real-time-strategy&tab= HTTP/1.1
+2022-06-27 23:33:21,United States,Unknown: 37.750999, -97.821999,GET /git/explore/repos?sort=feweststars&q=shell-script&tab= HTTP/1.1
+2022-06-27 23:34:28,United States,Austin,GET /XXX HTTP/1.1
+2022-06-27 23:34:28,United States,Austin,GET /css/XXX HTTP/1.1
+2022-06-27 23:34:28,United States,Austin,GET /css/XXX HTTP/1.1
+2022-06-27 23:34:28,United States,Austin,GET /js/XXX HTTP/1.1
+2022-06-27 23:34:29,United States,Austin,GET /js/XXX HTTP/1.1
+2022-06-27 23:34:29,United States,Austin,GET /js/XXX HTTP/1.1
+2022-06-27 23:34:29,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:29,United States,Austin,GET /js/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:30,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /webfonts/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /webfonts/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:31,United States,Austin,GET /webfonts/XXX HTTP/1.1
+2022-06-27 23:34:32,United States,Austin,GET /images/XXX HTTP/1.1
+2022-06-27 23:34:32,United States,Austin,GET / HTTP/1.1
+2022-06-27 23:34:32,United States,Austin,GET /images/favicon-32x32.png HTTP/1.1
+2022-06-27 23:34:32,United States,Austin,GET /XXX HTTP/1.1
+2022-06-27 23:34:37,United States,Austin,GET /images/favicon-32x32.png HTTP/1.1
+2022-06-27 23:34:59,United States,Austin,None
+2022-06-27 23:35:02,Germany,Unknown: 51.299301, 9.490900,GET /git/ HTTP/1.1
+2022-06-27 23:35:04,United States,Austin,None
+```
+
 ## Usage
 
 ```
 usage: httpd-logparser [-h] [-fr [FILES_REGEX]] [-f [FILES_LIST]] [-c CODES [CODES ...]] [-cf [COUNTRIES]] [-tf [TIME_FORMAT]] [-if [INCL_FIELDS]]
-                     [-ef [EXCL_FIELDS]] [-gl] [-ge [GEOTOOL_EXEC]] [-gd [GEO_DATABASE_LOCATION]] [-dl [DATE_LOWER]] [-du [DATE_UPPER]]
-                     [-sb [SORTBY_FIELD]] [-ro] [-st] [-p] [--httpd-conf-file] [--httpd-log-nickname] [-lf LOG_FORMAT] [-ph]
-                     [--output-format {table,csv}]
+                       [-ef [EXCL_FIELDS]] [-gl] [-ge [GEOTOOL_EXEC]] [-gd [GEO_DATABASE_LOCATION]] [-dl [DATE_LOWER]] [-du [DATE_UPPER]] [-sb [SORTBY_FIELD]]
+                       [-ro] [-st] [-p] [--httpd-conf-file] [--httpd-log-nickname] [-lf LOG_FORMAT] [-ph] [--output-format {table,csv}]
+                       [--head [READ_FIRST_LINES_NUM]] [--tail [READ_LAST_LINES_NUM]] [--sort-logs-by {date,size,name}] [--verbose]
 
 Apache HTTPD server log parser
 
@@ -431,12 +477,11 @@ optional arguments:
   -tf [TIME_FORMAT], --time-format [TIME_FORMAT]
                         Output time format. (default: %d-%m-%Y %H:%M:%S)
   -if [INCL_FIELDS], --included-fields [INCL_FIELDS]
-                        Included fields. All fields: all, log_file_name, http_status, remote_host, country, city, time, time_diff, user_agent,
-                        http_request (default: http_status, remote_host, time, time_diff, user_agent, http_request)
+                        Included fields. All fields: all, log_file_name, http_status, remote_host, country, city, time, time_diff, user_agent, http_request
+                        (default: http_status,remote_host,time,time_diff,user_agent,http_request)
   -ef [EXCL_FIELDS], --excluded-fields [EXCL_FIELDS]
                         Excluded fields. (default: None)
-  -gl, --geo-location   Check origin countries with external "geoiplookup" tool. NOTE: Automatically includes "country" and "city" fields. (default:
-                        False)
+  -gl, --geo-location   Check origin countries with external "geoiplookup" tool. NOTE: Automatically includes "country" and "city" fields. (default: False)
   -ge [GEOTOOL_EXEC], --geotool-exec [GEOTOOL_EXEC]
                         "geoiplookup" tool executable found in PATH. (default: geoiplookup)
   -gd [GEO_DATABASE_LOCATION], --geo-database-dir [GEO_DATABASE_LOCATION]
@@ -447,7 +492,7 @@ optional arguments:
                         Do not check log entries newer than this day. Day syntax: 31-12-2020 (default: None)
   -sb [SORTBY_FIELD], --sort-by [SORTBY_FIELD]
                         Sort by an output field. (default: None)
-  -ro, --reverse-order  Sort in reverse order. (default: False)
+  -ro, --reverse        Sort in reverse order. (default: False)
   -st, --show-stats     Show short statistics at the end. (default: False)
   -p, --show-progress   Show progress information. (default: False)
   --httpd-conf-file     Apache HTTPD configuration file with LogFormat directive. (default: /etc/httpd/conf/httpd.conf)
@@ -457,6 +502,13 @@ optional arguments:
   -ph, --print-headers  Print column headers. (default: False)
   --output-format {table,csv}
                         Output format for results. (default: table)
+  --head [READ_FIRST_LINES_NUM]
+                        Read first N lines from all log entries. (default: None)
+  --tail [READ_LAST_LINES_NUM]
+                        Read last N lines from all log entries. (default: None)
+  --sort-logs-by {date,size,name}
+                        Sorting order for input log files. (default: name)
+  --verbose             Verbose output. (default: False)
 ```
 
 ## License
