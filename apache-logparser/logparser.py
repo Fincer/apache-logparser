@@ -79,6 +79,34 @@ class program(object):
     return out_fields
 
   """
+  Get default Apache HTTPD configuration file location
+  """
+  def get_apache_conf_path(self):
+
+    path = None
+    os_data_file = '/etc/os-release'
+    conf_path = [
+      { 'os_check_file': os_data_file, 'os_like': 'Arch Linux', 'path': '/etc/httpd/conf/httpd.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Debian',     'path': '/etc/apache2/apache2.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Ubuntu',     'path': '/etc/apache2/apache2.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Linux Mint', 'path': '/etc/apache2/apache2.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'openSUSE',   'path': '/etc/apache2/httpd.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Gentoo',     'path': '/etc/apache2/httpd.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Red Hat',    'path': '/etc/httpd/conf/httpd.conf'},
+      { 'os_check_file': os_data_file, 'os_like': 'Fedora',     'path': '/etc/httpd/conf/httpd.conf'}
+    ]
+
+    if self.check_file(os_data_file, "os.R_OK"):
+      with open(os_data_file, 'r') as f:
+        for line in f:
+          if re.match('^[ ]?NAME=\"', line):
+            for a in conf_path:
+              if re.match('.*' + a['os_like'] + '.*', line):
+                path = a['path']
+                return path
+    return path
+
+  """
   Argument parser
   """
   def get_args(self):
@@ -111,21 +139,22 @@ class program(object):
       '-c',  '--status-codes',
       help     = 'Print only these numerical status codes.\nRegular expressions supported.',
       nargs    = '+',
-      dest     = 'codes'
+      dest     = 'codes',
+      required = False
     )
     argparser.add_argument(
       '-cf', '--countries',
       help     = 'Include only these countries.\nNegative match (exclude): "\!Country"',
       nargs    = '?',
       type     = lambda x: [i for i in x.split(',')],
-      dest     = 'countries'
+      dest     = 'countries',
+      required = False
     )
     argparser.add_argument(
       '-tf', '--time-format',
       help     = 'Output time format.',
       nargs    = '?',
       dest     = 'time_format',
-      default  = out_time_format
     )
     argparser.add_argument(
       '-if', '--included-fields',
@@ -154,7 +183,7 @@ class program(object):
       help     = '"geoiplookup" tool executable found in PATH.',
       nargs    = '?',
       dest     = 'geotool_exec',
-      default  = "geoiplookup"
+      default  = 'geoiplookup'
     )
     argparser.add_argument(
       '-gd', '--geo-database-dir',
@@ -204,7 +233,7 @@ class program(object):
       help     = 'Apache HTTPD configuration file with LogFormat directive.',
       action   = 'store_true',
       dest     = 'httpd_conf_file',
-      default  = '/etc/httpd/conf/httpd.conf'
+      default  = self.get_apache_conf_path()
     )
     argparser.add_argument(
       '--httpd-log-nickname',
@@ -370,7 +399,10 @@ class program(object):
           break
 
     if os.access(file_path, eval(flag)):
-      self.txt.print_verbose('File check', file_path, 'flags: ' + flag)
+      try:
+        self.txt.print_verbose('File check', file_path, 'flags: ' + flag)
+      except AttributeError:
+        pass
       return True
     return False
 
