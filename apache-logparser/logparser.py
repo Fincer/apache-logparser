@@ -231,9 +231,10 @@ class program(object):
     argparser.add_argument(
       '--httpd-conf-file',
       help     = 'Apache HTTPD configuration file with LogFormat directive.',
-      action   = 'store_true',
       dest     = 'httpd_conf_file',
-      default  = self.get_apache_conf_path()
+      default  = self.get_apache_conf_path(),
+      nargs    = '?',
+      type     = str
     )
     argparser.add_argument(
       '--httpd-log-nickname',
@@ -411,21 +412,20 @@ class program(object):
   """
   def get_httpd_logformat_directive(self, cfile, tag = None):
 
-    try:
-      log_format = None
-      self.txt.print_verbose('Apache configuration file', cfile)
-      with open(cfile, 'r') as f:
-        for line in f:
-          if re.search('^[ ]+LogFormat ".*' + tag, line):
-            r = re.search('^[ ]+LogFormat "(.*)(!?("))', line)
-            log_format = r.groups()[0].replace('\\', '')
-            break
-        f.close()
-        self.txt.print_verbose('Log format', log_format)
-        return log_format
+    if not self.check_file(cfile, "os.R_OK"):
+      raise Exception("Couldn't open Apache HTTPD configuration file '{:s}'.".format(cfile))
 
-    except:
-      raise Exception("Couldn't open Apache HTTPD configuration file.")
+    log_format = None
+    self.txt.print_verbose('Apache configuration file', cfile)
+    with open(cfile, 'r') as f:
+      for line in f:
+        if re.search('^[ ]+LogFormat ".*' + tag, line):
+          r = re.search('^[ ]+LogFormat "(.*)(!?("))', line)
+          log_format = r.groups()[0].replace('\\', '')
+          break
+      f.close()
+      self.txt.print_verbose('Log format', log_format)
+      return log_format
 
   """
   Geotool processing
@@ -545,20 +545,19 @@ class program(object):
 
     for sfile in sfiles:
 
-      try:
-        with open(sfile, 'r') as f:
-          line_count = len(list(f))
-          f.close()
+      if not self.check_file(sfile, "os.R_OK"):
+        raise Exception("Couldn't read input file '{}'.".format(sfile))
 
-          files_tmp.append({
-            'file':          str(sfile),
-            'modified_date': os.path.getmtime(sfile),
-            'size':          os.path.getsize(sfile),
-            'line_count':    line_count
-          })
+      with open(sfile, 'r') as f:
+        line_count = len(list(f))
+        f.close()
 
-      except:
-        raise Exception("Couldn't read input file " + sfile)
+        files_tmp.append({
+          'file':          str(sfile),
+          'modified_date': os.path.getmtime(sfile),
+          'size':          os.path.getsize(sfile),
+          'line_count':    line_count
+        })
 
       if files_order == 'date':
         files_tmp.sort(key = lambda d: d['modified_date'])
@@ -645,50 +644,50 @@ class program(object):
 
     for sfile in sfiles:
       append = False
-      try:
-        with open(sfile, 'r') as f:
-          line_count = len(list(f))
-          f.close()
 
-          line_end = line_start + line_count
+      if not self.check_file(sfile, "os.R_OK"):
+        raise Exception("Couldn't read input file '{}'.".format(sfile))
 
-          if line_range_min is not None:
-            if line_range_min >= line_start and line_range_min <= line_end:
-              append = True
-              line_start = line_range_min
-          if line_range_min is None and line_end < line_range_max:
+      with open(sfile, 'r') as f:
+        line_count = len(list(f))
+        f.close()
+
+        line_end = line_start + line_count
+
+        if line_range_min is not None:
+          if line_range_min >= line_start and line_range_min <= line_end:
             append = True
+            line_start = line_range_min
+        if line_range_min is None and line_end < line_range_max:
+          append = True
 
-          if line_range_max is not None:
-            if line_range_max >= line_start and line_range_max <= line_end:
-              append = True
-              line_end = line_range_max
-            if line_range_min < line_end and line_range_max > line_end:
-              append = True
-          if line_range_max is None and line_start > line_range_min:
+        if line_range_max is not None:
+          if line_range_max >= line_start and line_range_max <= line_end:
             append = True
+            line_end = line_range_max
+          if line_range_min < line_end and line_range_max > line_end:
+            append = True
+        if line_range_max is None and line_start > line_range_min:
+          append = True
 
-          if append:
-            files_and_lines['files'].append({
-              'file':              str(sfile),
-              'line_start_global': line_start,
-              'line_end_global':   line_end,
-              'modified_date':     os.path.getmtime(sfile),
-              'size':              os.path.getsize(sfile)
-            })
+        if append:
+          files_and_lines['files'].append({
+            'file':              str(sfile),
+            'line_start_global': line_start,
+            'line_end_global':   line_end,
+            'modified_date':     os.path.getmtime(sfile),
+            'size':              os.path.getsize(sfile)
+          })
 
-            # Use only the first matching line_start value
-            if not range_line_start_found:
-              range_line_start_found = True
-              range_line_start = line_start
-            # Use the last matching line_end value
-            range_line_end = line_end
+          # Use only the first matching line_start value
+          if not range_line_start_found:
+            range_line_start_found = True
+            range_line_start = line_start
+          # Use the last matching line_end value
+          range_line_end = line_end
 
-          lines_count += line_count
-          line_start  = lines_count + 1
-
-      except:
-        raise Exception("Couldn't read input file " + sfile)
+        lines_count += line_count
+        line_start  = lines_count + 1
 
     files_and_lines['lines_total'] = range_line_end - range_line_start
     files_and_lines['range_min']   = range_line_start
@@ -894,6 +893,9 @@ class program(object):
           lfile['file'],
           lfile['line_start_global'], lfile['line_end_global']
         ))
+
+      if not self.check_file(lfile['file'], "os.R_OK"):
+        raise Exception("Couldn't read input file '{}'.".format(lfile['file']))
 
       with open(lfile['file'], 'r') as f:
         f = list(f)
