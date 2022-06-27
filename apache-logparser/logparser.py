@@ -18,8 +18,9 @@
 
 ################################################################
 
-# TODO prev_host: instead of comparing to previous entry, check if such IP has been seen in XXX seconds
+# TODO: prev_host: instead of comparing to previous entry, check if such IP has been seen in XXX seconds
 # TODO: store IP values for temporary list for XXX seconds, and check list values
+# TODO: implement warning check for geoiplookup tool database files, i.e. "warning, some geo database files are very old. Please consider updating geo database information."
 
 import argparse
 import os
@@ -29,31 +30,51 @@ import subprocess
 from datetime import datetime
 from apachelogs import LogParser, InvalidEntryError
 
+class text_processing(object):
+
+  """
+  Init
+  """
+  def __init__(self, verbose):
+    self.show_verbose = verbose
+
+  """
+  Verbose output format (we do not use logger library)
+  """
+
+  def print_verbose(self, prefix='output', *args):
+    if self.show_verbose:
+      print('VERBOSE [{:s}]: {:s}'.format(prefix, ', '.join([str(i) for i in args])))
+
 class program(object):
 
   """
   Init
   """
   def __init__(self):
-    self.get_args()
+    self.args = self.get_args()
+
     # Exclude private IP address classes from geo lookup process
+    # Strip out %I and %O flags from Apache log format
     # 127.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-    self.private_class_ip_networks = ['^127\.', '^172\.[1[6-9]|2[0-9]|3[0-1]]\.', '^192\.168\.']
+    self.private_class_ip_networks = ['^127\.', '^172\.(1[6-9]{1}|2[0-9]{1}|3[0-1]{1})\.', '^192\.168\.']
+
+    self.txt = text_processing(verbose = self.args.verbose)
 
   """
   Define & get output fields
   """
   def get_out_fields(self):
     out_fields = {
-      'log_file_name': {'data': None, 'format': '{:s}',   'included': False, 'human_name': 'Log file name'},
-      'http_status':   {'data': None, 'format': '{:3s}',  'included': True,  'human_name': 'Status'},
-      'remote_host':   {'data': None, 'format': '{:15s}', 'included': True,  'human_name': 'Remote IP'},
-      'country':       {'data': None, 'format': '{:20s}', 'included': False, 'human_name': 'Country'},
-      'city':          {'data': None, 'format': '{:15s}', 'included': False, 'human_name': 'City'},
-      'time':          {'data': None, 'format': '{:20s}', 'included': True,  'human_name': 'Date/Time'},
-      'time_diff':     {'data': None, 'format': '{:8s}',  'included': True,  'human_name': 'Time diff'},
-      'user_agent':    {'data': None, 'format': '{:s}',   'included': True,  'human_name': 'User agent'},
-      'http_request':  {'data': None, 'format': '{:s}',   'included': True,  'human_name': 'Request'}
+      'log_file_name': {'data': None, 'format': '{:s}',   'included': False, 'human_name': 'Log file name', 'sort_index': 0},
+      'http_status':   {'data': None, 'format': '{:3s}',  'included': True,  'human_name': 'Status',        'sort_index': 1},
+      'remote_host':   {'data': None, 'format': '{:15s}', 'included': True,  'human_name': 'Remote IP',     'sort_index': 2},
+      'country':       {'data': None, 'format': '{:20s}', 'included': False, 'human_name': 'Country',       'sort_index': 3},
+      'city':          {'data': None, 'format': '{:15s}', 'included': False, 'human_name': 'City',          'sort_index': 4},
+      'time':          {'data': None, 'format': '{:20s}', 'included': True,  'human_name': 'Date/Time',     'sort_index': 5},
+      'time_diff':     {'data': None, 'format': '{:8s}',  'included': True,  'human_name': 'Time diff',     'sort_index': 6},
+      'user_agent':    {'data': None, 'format': '{:s}',   'included': True,  'human_name': 'User agent',    'sort_index': 7},
+      'http_request':  {'data': None, 'format': '{:s}',   'included': True,  'human_name': 'Request',       'sort_index': 8}
     }
     return out_fields
 
@@ -112,7 +133,7 @@ class program(object):
       nargs    = '?',
       dest     = 'incl_fields',
       type     = lambda x: [i for i in x.split(',')],
-      default  = ', '.join(incl_fields)
+      default  = ','.join(incl_fields)
     )
     argparser.add_argument(
       '-ef', '--excluded-fields',
@@ -161,7 +182,7 @@ class program(object):
       dest     = 'sortby_field'
     )
     argparser.add_argument(
-      '-ro', '--reverse-order',
+      '-ro', '--reverse',
       help     = 'Sort in reverse order.',
       dest     = 'sortby_reverse',
       action   = 'store_true'
@@ -199,7 +220,7 @@ class program(object):
       required = False
     )
     argparser.add_argument(
-      '-ph', '--print-headers',
+      '-ph', '--print-header',
       help     = 'Print column headers.',
       dest     = 'column_headers',
       required = False,
@@ -212,6 +233,37 @@ class program(object):
       required = False,
       default  = 'table',
       choices  = ['table', 'csv']
+    )
+    argparser.add_argument(
+      '--head',
+      help     = 'Read first N lines from all log entries.',
+      dest     = 'read_first_lines_num',
+      required = False,
+      nargs    = '?',
+      type     = int
+    )
+    argparser.add_argument(
+      '--tail',
+      help     = 'Read last N lines from all log entries.',
+      dest     = 'read_last_lines_num',
+      required = False,
+      nargs    = '?',
+      type     = int
+    )
+    argparser.add_argument(
+      '--sort-logs-by',
+      help     = 'Sorting order for input log files.',
+      dest     = 'sort_logs_by_info',
+      required = False,
+      default  = 'name',
+      choices  = ['date', 'size', 'name']
+    )
+    argparser.add_argument(
+      '--verbose',
+      help     = 'Verbose output.',
+      dest     = 'verbose',
+      required = False,
+      action   = 'store_true'
     )
     args = argparser.parse_args()
     return args
@@ -266,12 +318,14 @@ class program(object):
       if not code_appended:
         codes.append((user_code, validated))
 
+    self.txt.print_verbose('Available status codes', codes)
+
     return codes
 
   """
   Get log file list
   """
-  def get_files(self, files_regex=None, files_list=None):
+  def get_files(self, files_regex = None, files_list = None):
 
     files = []
 
@@ -298,6 +352,8 @@ class program(object):
       raise Exception("No matching files found.")
 
     files.sort()
+
+    self.txt.print_verbose('Input files', files)
     return files
 
   """
@@ -314,16 +370,18 @@ class program(object):
           break
 
     if os.access(file_path, eval(flag)):
-        return True
+      self.txt.print_verbose('File check', file_path, 'flags: ' + flag)
+      return True
     return False
 
   """
   Get Apache HTTPD LogFormat directive syntax
   """
-  def get_httpd_logformat_directive(self, cfile, tag=None):
+  def get_httpd_logformat_directive(self, cfile, tag = None):
 
     try:
       log_format = None
+      self.txt.print_verbose('Apache configuration file', cfile)
       with open(cfile, 'r') as f:
         for line in f:
           if re.search('^[ ]+LogFormat ".*' + tag, line):
@@ -331,6 +389,7 @@ class program(object):
             log_format = r.groups()[0].replace('\\', '')
             break
         f.close()
+        self.txt.print_verbose('Log format', log_format)
         return log_format
 
     except:
@@ -339,7 +398,7 @@ class program(object):
   """
   Geotool processing
   """
-  def geotool_get_data(self, geotool_exec, database_file, remote_host):
+  def geotool_get_data(self, geotool_ok, geotool_exec, database_file, remote_host):
 
     host_country = None
     host_city    = None
@@ -352,7 +411,7 @@ class program(object):
         'host_city':    host_city
       }
 
-    if self.check_file(geotool_exec, "os.X_OK", "PATH") and self.check_file(database_file, "os.R_OK"):
+    if geotool_ok:
 
       host_country_main = subprocess.check_output([geotool_exec,'-d', database_file, remote_host]).rstrip().decode()
       host_country_main = host_country_main.split('\n')
@@ -424,25 +483,186 @@ class program(object):
     return skip_line
 
   """
-  Get total number of lines in files
+  Get lines to be processed from input files and min/max input
+  min and max work much like Unix tools 'head' and 'tail'
+  Only a single value (min or max) is allowed
   """
-  def get_file_line_count(self, sfiles):
 
-    lines_in_files = []
+  def get_file_lines_head_tail(self, sfiles, line_range_min = None, line_range_max = None, files_order = None):
+
+    files_and_lines = {'files': [], 'lines_total': 0, 'range_min': 0, 'range_max': 0}
+    files_tmp = []
+
+    lines_count = 0
+    line_start  = 0
+    line_end    = 0
+
+    if line_range_min and line_range_max:
+      raise Exception("Either first or last line limit can be used, not both.")
+
+    if files_order is None:
+      raise Exception("Sorting order for input files missing.")
+
+    if line_range_min is not None:
+      if line_range_min < 0:
+        line_range_min = None
+
+    if line_range_max is not None:
+      if line_range_max < 0:
+        line_range_max = None
 
     for sfile in sfiles:
+
       try:
         with open(sfile, 'r') as f:
           line_count = len(list(f))
           f.close()
-          lines_in_files.append({
-            'file': str(sfile),
-            'lines': int(line_count)
+
+          files_tmp.append({
+            'file':          str(sfile),
+            'modified_date': os.path.getmtime(sfile),
+            'size':          os.path.getsize(sfile),
+            'line_count':    line_count
           })
+
       except:
         raise Exception("Couldn't read input file " + sfile)
 
-    return lines_in_files
+      if files_order == 'date':
+        files_tmp.sort(key = lambda d: d['modified_date'])
+      elif files_order == 'size':
+        files_tmp.sort(key = lambda d: d['size'])
+      elif files_order == 'name':
+        files_tmp.sort(key = lambda d: d['file'])
+
+    i = 0
+    for sfile in files_tmp:
+
+      line_end = (line_start + sfile['line_count']) - 1
+
+      files_and_lines['files'].append({
+        'file':              sfile['file'],
+        'line_start_global': line_start,
+        'line_end_global':   line_end,
+        'line_start_local':  0,
+        'line_end_local':    sfile['line_count'] - 1,
+      })
+
+      lines_count += line_count
+      line_start = files_and_lines['files'][i]['line_end_global'] + 1
+      i += 1
+
+    range_line_start = files_and_lines['files'][0]['line_start_global']
+    full_range                     = files_and_lines['files'][-1]['line_end_global']
+    files_and_lines['range_min']   = range_line_start
+    files_and_lines['range_max']   = full_range
+    files_and_lines['lines_total'] = full_range - range_line_start
+    i = 0
+
+    # Read last N lines
+    if line_range_max is not None:
+      range_start = full_range - line_range_max
+      if range_start <= 0:
+        range_start = 0
+
+      for l in files_and_lines['files']:
+        if range_start >= l['line_start_global'] and range_start <= l['line_end_global']:
+          l['line_start_global'] = range_start
+          l['line_start_local']  = l['line_end_local'] - (l['line_end_global'] - range_start)
+          del files_and_lines['files'][:i]
+        i += 1
+
+    # Read first N lines
+    if line_range_min is not None:
+      range_end = line_range_min
+      if range_end >= full_range:
+        range_end = full_range
+
+      for l in files_and_lines['files']:
+        if range_end >= l['line_start_global'] and range_end <= l['line_end_global']:
+          l['line_end_local']  = l['line_end_local'] - l['line_start_local'] - (l['line_end_global'] - range_end)
+          l['line_end_global'] = range_end
+          del files_and_lines['files'][i + 1:]
+        i += 1
+
+    return files_and_lines
+
+  """
+  Get lines to be processed from input files and range input
+  Range: <min> - <max>
+  """
+
+  def get_file_lines_range(self, sfiles, line_range_min=None, line_range_max=None):
+
+    files_and_lines = {'files': [], 'lines_total': 0, 'range_min': 0, 'range_max': 0}
+
+    lines_count            = 0
+    line_start             = 0
+    line_end               = 0
+    range_line_start       = 0
+    range_line_end         = 0
+    range_line_start_found = False
+
+    if line_range_min is not None:
+      if line_range_min < 0:
+        line_range_min = None
+
+    if line_range_max is not None:
+      if line_range_max < 0:
+        line_range_max = None
+
+    for sfile in sfiles:
+      append = False
+      try:
+        with open(sfile, 'r') as f:
+          line_count = len(list(f))
+          f.close()
+
+          line_end = line_start + line_count
+
+          if line_range_min is not None:
+            if line_range_min >= line_start and line_range_min <= line_end:
+              append = True
+              line_start = line_range_min
+          if line_range_min is None and line_end < line_range_max:
+            append = True
+
+          if line_range_max is not None:
+            if line_range_max >= line_start and line_range_max <= line_end:
+              append = True
+              line_end = line_range_max
+            if line_range_min < line_end and line_range_max > line_end:
+              append = True
+          if line_range_max is None and line_start > line_range_min:
+            append = True
+
+          if append:
+            files_and_lines['files'].append({
+              'file':              str(sfile),
+              'line_start_global': line_start,
+              'line_end_global':   line_end,
+              'modified_date':     os.path.getmtime(sfile),
+              'size':              os.path.getsize(sfile)
+            })
+
+            # Use only the first matching line_start value
+            if not range_line_start_found:
+              range_line_start_found = True
+              range_line_start = line_start
+            # Use the last matching line_end value
+            range_line_end = line_end
+
+          lines_count += line_count
+          line_start  = lines_count + 1
+
+      except:
+        raise Exception("Couldn't read input file " + sfile)
+
+    files_and_lines['lines_total'] = range_line_end - range_line_start
+    files_and_lines['range_min']   = range_line_start
+    files_and_lines['range_max']   = range_line_end
+
+    return files_and_lines
 
   """
   Date checker
@@ -488,42 +708,57 @@ class program(object):
   """
   def get_included_fields(self, fields, included_fields, excluded_fields=None):
 
-    included_values    = []
+    if included_fields:
+
+      # TODO: simplify logic
+      n = 0
+      included_fields = [[i.replace(' ',''), 0] for i in included_fields]
+      for a in included_fields:
+        a[1] += n
+        n += 1
+    if excluded_fields:
+      excluded_fields = [i.replace(' ','') for i in excluded_fields]
+
     all_defined_fields = []
+    fields_out         = {}
 
     if 'all' in included_fields or included_fields is None:
-      included_fields = [i for i in fields.keys()]
+      included_fields = [[i, int(i['sort_index'])] for i in fields.keys()]
 
     if excluded_fields is not None:
       if 'all' in excluded_fields:
         raise Exception("No output fields defined.")
-#      for i in excluded_fields:
-#        if i in included_fields:
-#          raise Exception("Field can't be both included and excluded. Offending field: {}".format(i))
-      included_fields = [i for i in included_fields if i not in excluded_fields]
-      all_defined_fields = included_fields + excluded_fields
+
+      # TODO: simplify logic
+      n = 0
+      included_fields = [[i, 0] for i in included_fields if i not in excluded_fields]
+      for a in included_fields:
+        a[1] += n
+        n += 1
+      all_defined_fields = [i[0] for i in included_fields] + excluded_fields
     else:
       all_defined_fields = included_fields
 
     for i in all_defined_fields:
-      if i not in fields.keys():
-        raise Exception("Unknown field value: {}. Accepted values: {}".format(i, ', '.join(fields.keys())))
+      if i[0] not in fields.keys():
+        raise Exception("Unknown field value: {}. Accepted values: {}".format(i, ','.join(fields.keys())))
 
-    for key, value in fields.items():
-      if key in included_fields:
-        value['included'] = True
-      else:
-        value['included'] = False
-      included_values.append(value['included'])
+    for a in included_fields:
+      for key, value in fields.items():
+        if key == a[0]:
+          value['sort_index'] = a[1]
+          value['included']   = True
+          fields_out[key]     = value
 
-    if True not in included_values:
+    if len(fields_out.keys()) == 0:
       raise Exception("No output fields defined.")
-    return fields
+
+    return fields_out
 
   """
   Process input files
   """
-  def process_files(self, user_arguments):
+  def process_files(self):
 
     prev_host    = ""
     log_entries  = []
@@ -531,21 +766,25 @@ class program(object):
     countries    = []
 
     # Log format as defined in Apache/HTTPD configuration file (LogFormat directive) or manually by user
-    if user_arguments.log_format:
-      log_format = user_arguments.log_format
+    if self.args.log_format:
+      log_format = self.args.log_format
     else:
-      log_format = self.get_httpd_logformat_directive(user_arguments.httpd_conf_file, user_arguments.httpd_log_nickname)
+      log_format = self.get_httpd_logformat_directive(self.args.httpd_conf_file, self.args.httpd_log_nickname)
+
+    # Remove bytes in & out fields from local traffic pattern
+    log_format_local = log_format.replace('%I','').replace('%O','').strip()
 
     parser = LogParser(log_format)
+    parser_local = LogParser(log_format_local)
 
-    if user_arguments.codes:
-      codes = self.get_input_status_codes(self.populate_status_codes(), user_arguments.codes)
+    if self.args.codes:
+      codes = self.get_input_status_codes(self.populate_status_codes(), self.args.codes)
 
-    if user_arguments.countries:
-      countries = user_arguments.countries
+    if self.args.countries:
+      countries = self.args.countries
 
-    date_lower = user_arguments.date_lower
-    date_upper = user_arguments.date_upper
+    date_lower = self.args.date_lower
+    date_upper = self.args.date_upper
     day_format = "%d-%m-%Y"
 
     if date_lower is not None:
@@ -553,74 +792,106 @@ class program(object):
     if date_upper is not None:
       date_upper = datetime.strptime(date_upper, day_format)
 
-    files = self.get_files(user_arguments.files_regex, user_arguments.files_list)
+    geotool_exec          = self.args.geotool_exec
+    geo_database_location = self.args.geo_database_location
 
-    show_progress   = user_arguments.show_progress
-    use_geolocation = user_arguments.use_geolocation
+    incl_fields = self.args.incl_fields
+    if isinstance(self.args.incl_fields, str):
+      incl_fields = self.args.incl_fields.split(',')
 
-    geotool_exec          = user_arguments.geotool_exec
-    geo_database_location = user_arguments.geo_database_location
+    use_geolocation = self.args.use_geolocation
+    geotool_ok      = False
 
-    incl_fields = user_arguments.incl_fields
-    if isinstance(user_arguments.incl_fields, str):
-      incl_fields = user_arguments.incl_fields.replace(' ','').split(',')
+    if use_geolocation:
+      if self.check_file(geotool_exec, "os.X_OK", "PATH") and self.check_file(geo_database_location, "os.R_OK"):
+        geotool_ok = True
+
+    if use_geolocation:
+      if 'country' not in incl_fields:
+        incl_fields.append('country')
+      if 'city' not in incl_fields:
+        incl_fields.append('city')
+
+    if 'country' in incl_fields or 'city' in incl_fields:
+      use_geolocation = True
 
     fields = self.get_included_fields(
       self.get_out_fields(),
       incl_fields,
-      user_arguments.excl_fields
+      self.args.excl_fields
     )
-
-    if use_geolocation:
-      fields['country']['included'] = True
-      fields['city']['included']    = True
-
-    if fields['country']['included'] or fields['city']['included']:
-      use_geolocation = True
 
     invalid_lines        = []
     field_names          = []
-    i                    = 0
     country_seen         = False
     geo_data             = None
     skip_line_by_status  = False
     skip_line_by_country = False
+    file_num             = 0
+    stri                 = ""
 
-    lines_total = sum([i['lines'] for i in self.get_file_line_count(files)])
+    files_input        = self.get_files(self.args.files_regex, self.args.files_list)
+    files_process_data = self.get_file_lines_head_tail(
+      files_input,
+      self.args.read_first_lines_num,
+      self.args.read_last_lines_num,
+      self.args.sort_logs_by_info
+    )
 
-    if show_progress:
+    lines_total        = files_process_data['lines_total']
+    files_total        = len(files_process_data['files'])
+
+    self.txt.print_verbose(
+      'Log entry range',
+      str(files_process_data['files'][0]['line_start_global'])
+      + ' - ' +
+      str(files_process_data['files'][-1]['line_end_global'])
+    )
+
+    if self.args.show_progress or self.args.verbose:
       print(
         "File count: {}\nLines in total: {}".format(
-          str(len(files)),
+          str(files_total),
           str(lines_total)
         ))
 
-    for lfile in files:
+    for lfile in files_process_data['files']:
 
-      if show_progress:
-        print("Processing file: {} (lines: {})".format(
-          lfile,
-          str(self.get_file_line_count([lfile])[0]['lines'])
+      if self.args.show_progress or self.args.verbose:
+        print("Processing file: {:s} (lines: {:d}-{:d})".format(
+          lfile['file'],
+          lfile['line_start_global'], lfile['line_end_global']
         ))
 
-      with open(lfile, 'r') as f:
+      with open(lfile['file'], 'r') as f:
+        f = list(f)
+        range_start = files_process_data['files'][file_num]['line_start_local']
+        range_end   = files_process_data['files'][file_num]['line_end_local']
 
-        for line in f:
+        lines = range(range_start, range_end)
+        line_num = 1
 
-          if show_progress:
-            print("Processing log entry: {} ({}%)".format(
-              str(i),
-              round(100 * (i/lines_total), 2)
+        for line in lines:
+
+          if self.args.show_progress or self.args.verbose:
+            print("Processing log entry: {:d}/{:d} ({}%)".format(
+              line_num,
+              len(lines),
+              round(100 * (line_num/len(lines)), 2)
             ), end = "\r")
 
-          if i != 0 and not (skip_line_by_status or skip_line_by_country) and entry_data:
+          if line_num != 1 and not (skip_line_by_status or skip_line_by_country) and entry_data:
             prev_host      = entry_data['remote_host']
             prev_host_time = entry_data['time']
 
           try:
-            entry = parser.parse(line)
+            if re.match('|'.join(self.private_class_ip_networks), f[line]):
+              entry = parser_local.parse(f[line])
+            else:
+              entry = parser.parse(f[line])
           except InvalidEntryError:
-            invalid_lines.append((lfile, i + 1))
+            invalid_lines.append((lfile['file'], line_num))
+            line_num += 1
             continue
 
           entry_data = {
@@ -632,7 +903,7 @@ class program(object):
           }
 
           if not self.date_checker(date_lower, date_upper, entry_data['time']):
-            i += 1
+            line_num += 1
             continue
 
           if len(codes) > 0:
@@ -645,7 +916,7 @@ class program(object):
               country_seen = False
 
             if not country_seen:
-              geo_data = self.geotool_get_data(geotool_exec, geo_database_location, entry_data['remote_host'])
+              geo_data = self.geotool_get_data(geotool_ok, geotool_exec, geo_database_location, entry_data['remote_host'])
 
             if len(countries) > 0 and geo_data is not None:
               skip_line_by_country = self.filter_country(countries, geo_data['host_country'])
@@ -654,7 +925,7 @@ class program(object):
             skip_line_by_country = False
 
           if skip_line_by_status or skip_line_by_country:
-            i += 1
+            line_num += 1
             continue
 
           time_diff = str('NEW_CONN')
@@ -664,29 +935,29 @@ class program(object):
               time_diff = int(time_diff)
             if time_diff > 0:
               time_diff = "+" + str(time_diff)
-          if i == 0:
+          if line_num == 1 and file_num == 0:
             time_diff = int(0)
 
-          if fields['log_file_name']['included']:
+          if 'log_file_name' in fields:
             fields['log_file_name']['data'] = lfile
-          if fields['http_status']['included']:
+          if 'http_status' in fields:
             fields['http_status']['data'] = entry_data['status']
-          if fields['remote_host']['included']:
+          if 'remote_host' in fields:
             fields['remote_host']['data'] = entry_data['remote_host']
 
           if geo_data is not None:
-            if fields['country']['included']:
+            if 'country' in fields:
               fields['country']['data'] = geo_data['host_country']
-            if fields['city']['included']:
+            if 'city' in fields:
               fields['city']['data'] = geo_data['host_city']
 
-          if fields['time']['included']:
+          if 'time' in fields:
             fields['time']['data'] = entry_data['time']
-          if fields['time_diff']['included']:
+          if 'time_diff' in fields:
             fields['time_diff']['data'] = time_diff
-          if fields['user_agent']['included']:
+          if 'user_agent' in fields:
             fields['user_agent']['data'] = entry_data['user_agent']
-          if fields['http_request']['included']:
+          if 'http_request' in fields:
             fields['http_request']['data'] = entry_data['http_request']
 
           stri = ""
@@ -703,30 +974,31 @@ class program(object):
                 field_names.append((key, value['human_name']))
 
           log_entries.append(printargs)
-          i += 1
+          line_num += 1
 
-    return [log_entries, files, i, stri, field_names, invalid_lines]
+      file_num += 1
+
+    return [log_entries, files_process_data['files'], lines_total, stri, field_names, invalid_lines]
 
   """
   Execute
   """
   def execute(self):
 
-    user_arguments = self.get_args()
+    print_headers  = self.args.column_headers
+    show_progress  = self.args.show_progress
+    show_stats     = self.args.show_stats
+    output_format  = self.args.output_format
 
-    print_headers  = user_arguments.column_headers
-    show_progress  = user_arguments.show_progress
-    show_stats     = user_arguments.show_stats
-    output_format  = user_arguments.output_format
+    sortby_field   = self.args.sortby_field
+    reverse_order  = self.args.sortby_reverse
 
-    sortby_field   = user_arguments.sortby_field
-    reverse_order  = bool(user_arguments.sortby_reverse)
+    if self.args.incl_fields:
+      if 'all' not in self.args.incl_fields:
+        if sortby_field and sortby_field not in self.args.incl_fields:
+          raise Exception("Sort-by field must be included in output fields.")
 
-    if 'all' not in user_arguments.incl_fields:
-      if sortby_field and sortby_field not in user_arguments.incl_fields:
-        raise Exception("Sort-by field must be included in output fields.")
-
-    results = self.process_files(user_arguments)
+    results = self.process_files()
     result_entries = results[0]
     result_files   = results[1]
     result_lines   = results[2]
@@ -735,16 +1007,16 @@ class program(object):
     out_fields_human_names = [i[1] for i in results[4]]
     invalid_lines  = results[5]
 
+    if sortby_field is None and reverse_order:
+      raise Exception("You must define a field for reverse sorting.")
+
     if sortby_field is not None:
       out_field_validation = self.get_out_field(out_fields, sortby_field)
       if out_field_validation[0]:
         result_entries.sort(
-          key = lambda result_entries : result_entries[out_field_validation[1]] or '',
+          key = lambda r : r[out_field_validation[1]] or '',
           reverse = reverse_order
         )
-
-    if not show_progress:
-      print("\n")
 
     if output_format == 'table':
 
@@ -763,7 +1035,6 @@ class program(object):
     if output_format == 'csv':
 
       if print_headers:
-        print("\n")
         print(','.join(out_fields_human_names))
 
       for entry in result_entries:
@@ -780,7 +1051,7 @@ class program(object):
         "Processed log entries: {:d}\n" +
         "Matched log entries:   {:d}\n"
              ).format(
-          ', '.join(result_files),
+          ', '.join([i['file'] for i in result_files['files']]),
           result_lines,
           len(result_entries)
         )
