@@ -21,6 +21,11 @@
 # TODO: prev_host: instead of comparing to previous entry, check if such IP has been seen in XXX seconds
 # TODO: store IP values for temporary list for XXX seconds, and check list values
 # TODO: implement warning check for geoiplookup tool database files, i.e. "warning, some geo database files are very old. Please consider updating geo database information."
+# TODO: implement support for json output
+
+# TODO: implement following output: most visited URIs (<count> <uri (http_request)>)
+  # Store each http_request
+    # If contains, add http_request dict count: (counter + 1), continue
 
 import argparse
 import os
@@ -831,20 +836,13 @@ class program(object):
       incl_fields = self.args.incl_fields.split(',')
 
     use_geolocation = self.args.use_geolocation
+    if 'country' in incl_fields or 'city' in incl_fields:
+      use_geolocation = True
     geotool_ok      = False
 
     if use_geolocation:
       if self.check_file(geotool_exec, "os.X_OK", "PATH") and self.check_file(geo_database_location, "os.R_OK"):
         geotool_ok = True
-
-    if use_geolocation:
-      if 'country' not in incl_fields:
-        incl_fields.append('country')
-      if 'city' not in incl_fields:
-        incl_fields.append('city')
-
-    if 'country' in incl_fields or 'city' in incl_fields:
-      use_geolocation = True
 
     fields = self.get_included_fields(
       self.get_out_fields(),
@@ -1009,7 +1007,7 @@ class program(object):
 
           log_entries.append(printargs)
           line_num += 1
-
+        print()
       file_num += 1
 
     return [log_entries, files_process_data['files'], lines_total, stri, field_names, invalid_lines]
@@ -1085,7 +1083,7 @@ class program(object):
         "Processed log entries: {:d}\n" +
         "Matched log entries:   {:d}\n"
              ).format(
-          ', '.join([i['file'] for i in result_files['files']]),
+          ', '.join([i['file'] for i in result_files]),
           result_lines,
           len(result_entries)
         )
