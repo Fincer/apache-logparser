@@ -159,7 +159,7 @@ NOTE: The last numerical part of all ip addresses are anonymized with `XXX` stri
 **Q: How many valid requests from Finland and Sweden occured between 15th - 24th April 2022?**
 
 ```
-httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,http_status,country --sort-by time --status-codes ^20* --day-lower "15-04-2022" --day-upper "24-04-2022" --countries Finland,Sweden --show-stats --show-progress
+httpd-logparser --files-regex "/var/log/httpd/access*log" --included-fields time,http_status,country --sort-by time --status-codes ^20* --day-lower "15-04-2022" --day-upper "24-04-2022" --countries Finland,Sweden --show-stats --show-progress
 
 File count: 5
 Lines in total: 86876
@@ -266,7 +266,7 @@ You should also check any invalid log lines detected by the tool.
 **Q: How many `4XX` codes have connected clients from China and United States produced?**
 
 ```
-httpd-logparser --files-regex /var/log/httpd/access_log --included-fields time,country,http_status,http_request --countries "United States",China --sort-by time --status-codes ^4 --show-progress --show-stats
+httpd-logparser --files-regex "/var/log/httpd/access*log" --included-fields time,country,http_status,http_request --countries "United States",China --sort-by time --status-codes ^4 --show-progress --show-stats
 
 File count: 2
 Lines in total: 23614
@@ -365,7 +365,7 @@ WinHTTP/1.1
 **Q: Which is time difference between single client requests? Exclude Finland. Include all access_log files.**
 
 ```
-httpd-logparser --included-fields http_status,time,time_diff,country --countries "\!Finland" --files-regex /var/log/httpd/old/access_log
+httpd-logparser --included-fields http_status,time,time_diff,country --countries "\!Finland" --files-regex "/var/log/httpd/old/access*log"
 
 200     Taiwan                  2022-06-19 12:21:47     NEW_CONN
 200     Taiwan                  2022-06-19 12:21:48     +1      
